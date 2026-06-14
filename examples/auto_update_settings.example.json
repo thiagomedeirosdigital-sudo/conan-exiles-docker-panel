@@ -1,0 +1,9 @@
+{
+  "checkerAtivo": true,
+  "autoUpdateAtivo": true,
+  "avisoMinutos": 1,
+  "mensagemAviso": "[UPDATE] Atualização detectada no Conan ou em mods. O servidor será reiniciado em 1 minuto para atualizar com backup seguro.",
+  "appIdServidor": "443030",
+  "workshopAppId": "440900",
+  "cooldownMinutos": 60
+}

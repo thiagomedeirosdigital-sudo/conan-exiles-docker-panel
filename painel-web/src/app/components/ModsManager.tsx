@@ -1,0 +1,254 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+
+type ModInfo = {
+  modId: string;
+  order: number;
+  title: string;
+  updatedAt?: string;
+  time_updated?: number;
+  modlistLine?: string;
+  hasModlistLine?: boolean;
+};
+
+export default function ModsManager() {
+  const [mods, setMods] = useState<ModInfo[]>([]);
+  const [novoMod, setNovoMod] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState<{ tipo: 'sucesso' | 'erro'; texto: string } | null>(null);
+
+  const carregar = async () => {
+    setLoading(true);
+    setFeedback(null);
+
+    try {
+      const res = await fetch('/api/mods');
+      const data = await res.json();
+
+      if (data.success && Array.isArray(data.mods)) {
+        setMods(data.mods);
+      } else {
+        setFeedback({ tipo: 'erro', texto: data.error || 'Erro ao carregar mods.' });
+      }
+    } catch {
+      setFeedback({ tipo: 'erro', texto: 'Erro de comunicação ao carregar mods.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    carregar();
+  }, []);
+
+  const mover = (index: number, direction: 'up' | 'down') => {
+    setMods(prev => {
+      const arr = [...prev];
+      const target = direction === 'up' ? index - 1 : index + 1;
+
+      if (target < 0 || target >= arr.length) return prev;
+
+      const temp = arr[index];
+      arr[index] = arr[target];
+      arr[target] = temp;
+
+      return arr.map((m, i) => ({ ...m, order: i + 1 }));
+    });
+  };
+
+  const salvar = async (lista = mods) => {
+    const modIds = lista.map(m => String(m.modId)).filter(Boolean);
+
+    if (!modIds.length) {
+      setFeedback({ tipo: 'erro', texto: 'Nenhum mod para salvar.' });
+      return;
+    }
+
+    setLoading(true);
+    setFeedback(null);
+
+    try {
+      const res = await fetch('/api/mods', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'save-order', modIds })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setMods(data.mods || lista);
+        setFeedback({ tipo: 'sucesso', texto: data.message || 'Ordem dos mods salva. Use Reinício Seguro para aplicar.' });
+      } else {
+        setFeedback({ tipo: 'erro', texto: data.error || 'Erro ao salvar mods.' });
+      }
+    } catch {
+      setFeedback({ tipo: 'erro', texto: 'Erro de comunicação ao salvar mods.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const adicionar = async () => {
+    const id = novoMod.trim();
+
+    if (!/^\d+$/.test(id)) {
+      setFeedback({ tipo: 'erro', texto: 'Informe um ID Steam válido do mod.' });
+      return;
+    }
+
+    if (mods.some(m => m.modId === id)) {
+      setFeedback({ tipo: 'erro', texto: 'Esse mod já está na lista.' });
+      return;
+    }
+
+    const novaLista = [
+      ...mods,
+      {
+        modId: id,
+        order: mods.length + 1,
+        title: id,
+        updatedAt: '',
+        hasModlistLine: false
+      }
+    ];
+
+    setMods(novaLista);
+    setNovoMod('');
+    await salvar(novaLista);
+    setTimeout(carregar, 700);
+  };
+
+  const remover = async (id: string) => {
+    if (!confirm(`Remover o mod ${id} da lista?\n\nSerá salvo no .env e no modlist.txt. Use Reinício Seguro para aplicar.`)) return;
+
+    const novaLista = mods.filter(m => m.modId !== id).map((m, i) => ({ ...m, order: i + 1 }));
+    setMods(novaLista);
+    await salvar(novaLista);
+  };
+
+  return (
+    <div style={{ backgroundColor: '#1e1e1e', padding: '25px', borderRadius: '8px', border: '1px solid #333', maxWidth: '1200px' }}>
+      <h2 style={{ marginTop: 0, color: '#f39c12', borderBottom: '1px solid #333', paddingBottom: '10px', fontSize: '18px' }}>
+        Modlist e Ordem de Carregamento
+      </h2>
+
+      {feedback && (
+        <div style={{
+          padding: '12px',
+          borderRadius: '6px',
+          marginBottom: '15px',
+          backgroundColor: feedback.tipo === 'sucesso' ? '#14532d' : '#5a1a1a',
+          color: '#fff'
+        }}>
+          {feedback.texto}
+        </div>
+      )}
+
+      <div style={{ padding: '12px', borderRadius: '6px', marginBottom: '15px', background: '#2a2412', border: '1px solid #8a5a00', color: '#f1c40f' }}>
+        A ordem abaixo é a ordem real de carregamento do Conan. Altere a ordem abaixo e clique em Aplicar Mods com Segurança para salvar, baixar/aplicar e reiniciar o Conan corretamente.
+      </div>
+
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
+        <input
+          type="text"
+          placeholder="ID do Mod Steam"
+          value={novoMod}
+          onChange={(e) => setNovoMod(e.target.value)}
+          style={{ flex: 1, minWidth: '220px', padding: '9px', borderRadius: '4px', border: '1px solid #444', backgroundColor: '#2a2a2a', color: '#fff' }}
+        />
+
+        <button type="button" onClick={adicionar} disabled={loading} style={{ padding: '9px 14px', borderRadius: '4px', border: 'none', backgroundColor: '#2ecc71', color: '#fff', fontWeight: 'bold', cursor: loading ? 'wait' : 'pointer' }}>
+          Inserir
+        </button>
+
+        <button type="button" onClick={carregar} disabled={loading} style={{ padding: '9px 14px', borderRadius: '4px', border: 'none', backgroundColor: '#3498db', color: '#fff', fontWeight: 'bold', cursor: loading ? 'wait' : 'pointer' }}>
+          🔄 Recarregar nomes da Steam
+        </button>
+
+          <button
+            type="button"
+            onClick={async () => {
+              const ok = confirm(
+                'Aplicar mods com segurança agora?\n\n' +
+                'Isso vai salvar a ordem atual, criar backup seguro, parar o Conan, recriar o container, baixar mods novos e subir o servidor novamente.\n\n' +
+                'Use somente em horário seguro.'
+              );
+
+              if (!ok) return;
+
+              try {
+                await salvarOrdemModsDetalhados();
+
+                const res = await fetch('/api/mods/apply', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ confirm: 'APLICAR_MODS' })
+                });
+
+                const data = await res.json();
+
+                if (!data.success) {
+                  alert(data.error || 'Falha ao aplicar mods.');
+                  return;
+                }
+
+                alert('Mods aplicados com segurança. Aguarde o servidor terminar de subir e confira os logs.');
+                await carregarModsDetalhados();
+              } catch {
+                alert('Erro ao aplicar mods com segurança.');
+              }
+            }}
+            style={{
+              padding: '10px 16px',
+              borderRadius: '5px',
+              border: 'none',
+              backgroundColor: '#dc2626',
+              color: '#fff',
+              fontWeight: 'bold',
+              cursor: 'pointer'
+            }}
+          >
+            🚀 Salvar e Aplicar Mods com Segurança
+          </button>
+      </div>
+
+      {loading && (
+        <div style={{ padding: '10px', background: '#222', border: '1px solid #444', borderRadius: '6px', marginBottom: '10px', color: '#ddd' }}>
+          Carregando mods...
+        </div>
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {mods.map((mod, index) => (
+          <div key=***REMOVIDO***
+            <div style={{ color: '#f39c12', fontWeight: 'bold' }}>#{index + 1}</div>
+
+            <div>
+              <div style={{ color: '#fff', fontWeight: 'bold' }}>🛠️ {mod.title || mod.modId}</div>
+              <div style={{ color: '#aaa', fontSize: '12px' }}>ID Steam: {mod.modId}</div>
+              {mod.updatedAt && <div style={{ color: '#888', fontSize: '11px' }}>Steam atualizado em: {mod.updatedAt}</div>}
+              {mod.hasModlistLine === false && <div style={{ color: '#e67e22', fontSize: '11px' }}>Atenção: linha não encontrada no modlist atual.</div>}
+            </div>
+
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <button type="button" onClick={() => mover(index, 'up')} disabled={index === 0 || loading} style={{ padding: '7px 10px', borderRadius: '4px', border: 'none', backgroundColor: index === 0 ? '#555' : '#444', color: '#fff', cursor: index === 0 ? 'not-allowed' : 'pointer' }}>↑</button>
+              <button type="button" onClick={() => mover(index, 'down')} disabled={index === mods.length - 1 || loading} style={{ padding: '7px 10px', borderRadius: '4px', border: 'none', backgroundColor: index === mods.length - 1 ? '#555' : '#444', color: '#fff', cursor: index === mods.length - 1 ? 'not-allowed' : 'pointer' }}>↓</button>
+            </div>
+
+            <button type="button" onClick={() => remover(mod.modId)} disabled={loading} style={{ padding: '7px 9px', borderRadius: '4px', border: 'none', backgroundColor: '#5a1a1a', color: '#ff6b6b', fontWeight: 'bold', cursor: loading ? 'wait' : 'pointer' }}>
+              Remover
+            </button>
+          </div>
+        ))}
+
+        {mods.length === 0 && !loading && (
+          <div style={{ padding: '14px', background: '#151515', border: '1px solid #333', borderRadius: '6px', color: '#aaa' }}>
+            Nenhum mod carregado.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

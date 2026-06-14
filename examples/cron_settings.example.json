@@ -1,0 +1,8 @@
+{
+  "restartAtivo": true,
+  "horaRestart": "03:00",
+  "tempoAviso1": 10,
+  "mensagem1": "[AVISO] O servidor reiniciará em 10 minutos para manutenção segura. Procurem um local seguro.",
+  "tempoAviso2": 5,
+  "mensagem2": "[AVISO] O servidor reiniciará em 5 minutos. Desloguem em local seguro."
+}

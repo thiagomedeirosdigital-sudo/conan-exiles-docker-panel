@@ -1,0 +1,273 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+
+export default function HomePage() {
+  const [activeTab, setActiveTab] = useState<'dash' | 'logs' | 'alerts'>('dash');
+  const [loading, setLoading] = useState(true);
+  const [powerLoading, setPowerLoading] = useState(false);
+  const [feedback, setFeedback] = useState<{ tipo: 'sucesso' | 'erro'; texto: string } | null>(null);
+
+  // Estados de Dados do Dashboard
+  const [serverName, setServerName] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [rconPassword, setRconPassword] = useState('');
+  const [maxPlayers, setMaxPlayers] = useState(20);
+  const [serverRegion, setServerRegion] = useState('0');
+  const [mods, setMods] = useState<string[]>([]);
+  const [novoModId, setNovoModId] = useState('');
+  const [textoRcon, setTextoRcon] = useState('');
+
+  // Estado de Alertas Customizados
+  const [horaRestart, setHoraRestart] = useState('03:00');
+  const [tempoAviso1, setTempoAviso1] = useState(10);
+  const [mensagem1, setMensagem1] = useState('');
+  const [tempoAviso2, setTempoAviso2] = useState(5);
+  const [mensagem2, setMensagem2] = useState('');
+
+  // Estado de Logs e Live Monitor
+  const [serverLogs, setServerLogs] = useState('Carregando terminal...');
+  const [stats, setStats] = useState({ status: 'Carregando...', cpu: '0.0', ram: { percent: '0', used: '0', total: '0' } });
+
+  useEffect(() => {
+    // Carga paralela inicial
+    Promise.all([
+      fetch('/api/config').then(res => res.json()),
+      fetch('/api/alerts').then(res => res.json())
+    ]).then(([configData, alertData]) => {
+      setServerName(configData.serverName);
+      setAdminPassword(configData.adminPassword);
+      setRconPassword(configData.rconPassword);
+      setMaxPlayers(configData.maxPlayers);
+      setServerRegion(configData.serverRegion);
+      setMods(configData.mods);
+
+      setHoraRestart(alertData.horaRestart);
+      setTempoAviso1(alertData.tempoAviso1);
+      setMensagem1(alertData.mensagem1);
+      setTempoAviso2(alertData.tempoAviso2);
+      setMensagem2(alertData.mensagem2);
+      
+      setLoading(false);
+    }).catch(() => setLoading(false));
+
+    // Loop de monitoramento de Hardware (3s)
+    const interval = setInterval(() => {
+      fetch('/api/stats')
+        .then(res => res.json())
+        .then(data => setStats(data))
+        .catch(() => setStats(prev => ({ ...prev, status: 'Offline' })));
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Monitor de Logs dinâmico quando a aba Logs é selecionada
+  useEffect(() => {
+    if (activeTab === 'logs') {
+      setServerLogs('Buscando logs recentes...');
+      fetch('/api/logs')
+        .then(res => res.json())
+        .then(data => setServerLogs(data.logs));
+    }
+  }, [activeTab]);
+
+  // Execução de Ligar / Desligar / Reiniciar Container
+  const handlePower = async (acao: 'start' | 'stop' | 'restart') => {
+    if (!confirm(`Tem certeza que deseja executar o comando [${acao.toUpperCase()}] no contêiner?`)) return;
+    setPowerLoading(true);
+    setFeedback(null);
+    try {
+      const res = await fetch('/api/power', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ acao })
+      });
+      const data = await res.json();
+      setFeedback({ tipo: data.success ? 'sucesso' : 'erro', texto: data.message || data.error });
+    } catch {
+      setFeedback({ tipo: 'erro', texto: 'Erro de comunicação ao enviar sinal de energia.' });
+    } finally { setPowerLoading(false); }
+  };
+
+  const salvarConfiguracoes = async (updatedMods?: string[]) => {
+    const listaMods = updatedMods !== undefined ? updatedMods : mods;
+    try {
+      const res = await fetch('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ serverName, adminPassword, rconPassword, maxPlayers, serverRegion, mods: listaMods }),
+      });
+      if (res.ok) setFeedback({ tipo: 'sucesso', texto: 'Configurações atualizadas no arquivo .env!' });
+    } catch { setFeedback({ tipo: 'erro', texto: 'Falha ao salvar configurações.' }); }
+  };
+
+  const salvarAlertas = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('/api/alerts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ horaRestart, tempoAviso1, mensagem1, tempoAviso2, mensagem2 })
+      });
+      if (res.ok) setFeedback({ tipo: 'sucesso', texto: 'Cronograma e avisos salvos no JSON com sucesso!' });
+    } catch { setFeedback({ tipo: 'erro', texto: 'Falha ao salvar cronograma.' }); }
+  };
+
+  const enviarRcon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!textoRcon.trim()) return;
+    try {
+      const res = await fetch('/api/rcon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mensagem: textoRcon }),
+      });
+      const data = await res.json();
+      setFeedback({ tipo: data.success ? 'sucesso' : 'erro', texto: data.success ? 'Broadcast RCON enviado com sucesso!' : data.error });
+      if (data.success) setTextoRcon('');
+    } catch { setFeedback({ tipo: 'erro', texto: 'Erro ao disparar RCON.' }); }
+  };
+
+  if (loading) return <div style={{ background: '#111', color: '#fff', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><h2>Iniciando Painel de Controle ISKAGAMES...</h2></div>;
+
+  return (
+    <div style={{ padding: '30px', fontFamily: 'sans-serif', backgroundColor: '#111', color: '#fff', minHeight: '100vh' }}>
+      
+      {/* TOP DE COMANDO E ENERGIA */}
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #333', paddingBottom: '20px' }}>
+        <div>
+          <h1 style={{ margin: 0, color: '#f39c12' }}>ISKAGAMES CONTROL</h1>
+          <p style={{ margin: '5px 0 0 0', color: '#888' }}>Gerenciamento Unificado • Linux Docker Engine</p>
+        </div>
+
+        {/* BOTÕES DE ENERGIA DO SERVIDOR */}
+        <div style={{ display: 'flex', gap: '10px', backgroundColor: '#1e1e1e', padding: '10px 15px', borderRadius: '6px', border: '1px solid #333', alignItems: 'center' }}>
+          <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#aaa', marginRight: '5px' }}>CONTROLE CONTAINER:</span>
+          <button onClick={() => handlePower('start')} disabled={powerLoading} style={{ padding: '6px 12px', borderRadius: '4px', border: 'none', background: '#2ecc71', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>▶ Ligar</button>
+          <button onClick={() => handlePower('stop')} disabled={powerLoading} style={{ padding: '6px 12px', borderRadius: '4px', border: 'none', background: '#e74c3c', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>⏹ Desligar</button>
+          <button onClick={() => handlePower('restart')} disabled={powerLoading} style={{ padding: '6px 12px', borderRadius: '4px', border: 'none', background: '#3498db', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>🔄 Reiniciar</button>
+        </div>
+        
+        {/* TELEMETRIA */}
+        <div style={{ display: 'flex', gap: '15px' }}>
+          <div style={{ background: '#1e1e1e', padding: '10px 15px', borderRadius: '6px', border: '1px solid #333', textAlign: 'center' }}>
+            <strong style={{ color: stats.status === 'Online' ? '#2ecc71' : '#e74c3c', display: 'block', fontSize: '14px' }}>{stats.status.toUpperCase()}</strong>
+          </div>
+          <div style={{ background: '#1e1e1e', padding: '10px 15px', borderRadius: '6px', border: '1px solid #333', width: '120px' }}>
+            <span style={{ color: '#888', fontSize: '11px' }}>CPU XEON: {stats.cpu}%</span>
+            <div style={{ background: '#333', height: '4px', borderRadius: '2px', marginTop: '4px', overflow: 'hidden' }}>
+              <div style={{ background: '#f39c12', height: '100%', width: `${Math.min(parseFloat(stats.cpu), 100)}%` }} />
+            </div>
+          </div>
+          <div style={{ background: '#1e1e1e', padding: '10px 15px', borderRadius: '6px', border: '1px solid #333', width: '130px' }}>
+            <span style={{ color: '#888', fontSize: '11px' }}>RAM: {stats.ram.used}G / {stats.ram.total}G</span>
+            <div style={{ background: '#333', height: '4px', borderRadius: '2px', marginTop: '4px', overflow: 'hidden' }}>
+              <div style={{ background: '#2ecc71', height: '100%', width: `${stats.ram.percent}%` }} />
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* FEEDBACK POPUP */}
+      {feedback && (
+        <div style={{ padding: '12px', borderRadius: '6px', marginBottom: '20px', backgroundColor: feedback.tipo === 'sucesso' ? '#1b5e20' : '#b71c1c', border: '1px solid rgba(255,255,255,0.1)' }}>
+          {feedback.texto}
+        </div>
+      )}
+
+      {/* NAVEGAÇÃO POR ABAS */}
+      <nav style={{ display: 'flex', gap: '10px', marginBottom: '25px' }}>
+        <button onClick={() => setActiveTab('dash')} style={{ padding: '10px 20px', borderRadius: '4px', border: 'none', backgroundColor: activeTab === 'dash' ? '#f39c12' : '#222', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>📊 Painel Principal</button>
+        <button onClick={() => setActiveTab('logs')} style={{ padding: '10px 20px', borderRadius: '4px', border: 'none', backgroundColor: activeTab === 'logs' ? '#f39c12' : '#222', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>📋 Logs do Console</button>
+        <button onClick={() => setActiveTab('alerts')} style={{ padding: '10px 20px', borderRadius: '4px', border: 'none', backgroundColor: activeTab === 'alerts' ? '#f39c12' : '#222', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>⏰ Alertas & Restarts</button>
+      </nav>
+
+      {/* CONTEÚDO DAS ABAS */}
+      {activeTab === 'dash' && (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '25px', alignItems: 'start' }}>
+            <div style={{ backgroundColor: '#1e1e1e', padding: '20px', borderRadius: '8px', border: '1px solid #333' }}>
+              <h2 style={{ marginTop: 0, color: '#f39c12', borderBottom: '1px solid #333', paddingBottom: '10px', fontSize: '18px' }}>⚙️ Variáveis de Ambiente (.env)</h2>
+              <div style={{ marginBottom: '12px' }}><label style={{ color: '#aaa', display: 'block', marginBottom: '4px' }}>Nome do Servidor:</label>
+                <input type="text" value={serverName} onChange={(e) => setServerName(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #444', backgroundColor: '#2a2a2a', color: '#fff' }} /></div>
+              <div style={{ marginBottom: '12px' }}><label style={{ color: '#aaa', display: 'block', marginBottom: '4px' }}>Senha Admin:</label>
+                <input type="text" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #444', backgroundColor: '#2a2a2a', color: '#fff', fontFamily: 'monospace' }} /></div>
+              <div style={{ marginBottom: '12px' }}><label style={{ color: '#aaa', display: 'block', marginBottom: '4px' }}>Senha RCON:</label>
+                <input type="text" value={rconPassword} onChange={(e) => setRconPassword(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #444', backgroundColor: '#2a2a2a', color: '#fff', fontFamily: 'monospace' }} /></div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
+                <div><label style={{ color: '#aaa', display: 'block', marginBottom: '4px' }}>Slots:</label>
+                  <input type="number" value={maxPlayers} onChange={(e) => setMaxPlayers(parseInt(e.target.value, 10) || 0)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #444', backgroundColor: '#2a2a2a', color: '#fff' }} /></div>
+                <div><label style={{ color: '#aaa', display: 'block', marginBottom: '4px' }}>Região:</label>
+                  <select value={serverRegion} onChange={(e) => setServerRegion(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #444', backgroundColor: '#2a2a2a', color: '#fff' }}><option value="0">Europa</option><option value="1">América do Norte</option><option value="4">América do Sul</option></select></div>
+              </div>
+              <button onClick={() => salvarConfiguracoes()} style={{ width: '100%', padding: '10px', borderRadius: '4px', border: 'none', backgroundColor: '#e67e22', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>💾 Salvar Variáveis</button>
+            </div>
+
+            <div style={{ backgroundColor: '#1e1e1e', padding: '20px', borderRadius: '8px', border: '1px solid #333' }}>
+              <h2 style={{ marginTop: 0, color: '#f39c12', borderBottom: '1px solid #333', paddingBottom: '10px', fontSize: '18px' }}>📦 Modlist Modificável</h2>
+              <form onSubmit={(e) => { e.preventDefault(); const n = [...mods, novoModId.trim()]; setMods(n); setNovoModId(''); salvarConfiguracoes(n); }} style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                <input type="text" placeholder="ID do Mod Steam" value={novoModId} onChange={(e) => setNovoModId(e.target.value)} style={{ flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid #444', backgroundColor: '#2a2a2a', color: '#fff' }} />
+                <button type="submit" style={{ padding: '8px 15px', borderRadius: '4px', border: 'none', backgroundColor: '#2ecc71', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>+ Inserir</button>
+              </form>
+              <div style={{ maxHeight: '220px', overflowY: 'auto' }}>
+                {mods.map(id => (
+                  <div key={id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: '#252525', borderRadius: '4px', marginBottom: '6px', border: '1px solid #333' }}>
+                    <span style={{ fontFamily: 'monospace' }}>🆔 {id}</span>
+                    <button onClick={() => { const n = mods.filter(m => m !== id); setMods(n); salvarConfiguracoes(n); }} style={{ background: 'none', border: 'none', color: '#e74c3c', cursor: 'pointer' }}>🗑️</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ marginTop: '20px', backgroundColor: '#1e1e1e', padding: '20px', borderRadius: '8px', border: '1px solid #333' }}>
+            <h2 style={{ marginTop: 0, color: '#f39c12', borderBottom: '1px solid #333', paddingBottom: '10px', fontSize: '18px' }}>📢 Transmissão RCON Direta (Chat Live)</h2>
+            <form onSubmit={enviarRcon} style={{ display: 'flex', gap: '15px', marginTop: '10px' }}>
+              <input type="text" placeholder="Digite a mensagem global..." value={textoRcon} onChange={(e) => setTextoRcon(e.target.value)} style={{ flex: 1, padding: '10px', borderRadius: '4px', border: '1px solid #444', backgroundColor: '#2a2a2a', color: '#fff' }} />
+              <button type="submit" style={{ padding: '0 25px', borderRadius: '4px', border: 'none', backgroundColor: '#3498db', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>⚡ Enviar</button>
+            </form>
+          </div>
+        </>
+      )}
+
+      {activeTab === 'logs' && (
+        <div style={{ backgroundColor: '#151515', padding: '20px', borderRadius: '8px', border: '1px solid #333', fontFamily: 'monospace', minHeight: '450px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', borderBottom: '1px solid #222', paddingBottom: '10px' }}>
+            <span style={{ color: '#2ecc71' }}>💻 stdout@conan-server-console</span>
+            <button onClick={() => { setServerLogs('Atualizando...'); fetch('/api/logs').then(res => res.json()).then(data => setServerLogs(data.logs)); }} style={{ background: '#333', border: 'none', color: '#fff', padding: '4px 10px', borderRadius: '3px', cursor: 'pointer' }}>🔄 Atualizar Logs</button>
+          </div>
+          <pre style={{ whiteSpace: 'pre-wrap', color: '#bbb', margin: 0, fontSize: '13px', maxHeight: '400px', overflowY: 'auto' }}>{serverLogs}</pre>
+        </div>
+      )}
+
+      {activeTab === 'alerts' && (
+        <form onSubmit={salvarAlertas} style={{ backgroundColor: '#1e1e1e', padding: '25px', borderRadius: '8px', border: '1px solid #333', maxWidth: '700px' }}>
+          <h2 style={{ marginTop: 0, color: '#f39c12', borderBottom: '1px solid #333', paddingBottom: '10px', fontSize: '18px' }}>⏰ Customização do Script de Restart Diário</h2>
+          
+          <div style={{ marginBottom: '15px' }}><label style={{ color: '#aaa', display: 'block', marginBottom: '5px' }}>Horário Automático do Reboot (Cron):</label>
+            <input type="time" value={horaRestart} onChange={(e) => setHoraRestart(e.target.value)} style={{ padding: '8px', borderRadius: '4px', border: '1px solid #444', backgroundColor: '#2a2a2a', color: '#fff', fontSize: '15px' }} /></div>
+          
+          <div style={{ border: '1px solid #2d2d2d', padding: '15px', borderRadius: '6px', marginBottom: '15px' }}>
+            <h3 style={{ margin: '0 0 10px 0', fontSize: '15px', color: '#e67e22' }}>Primeiro Alerta RCON</h3>
+            <div style={{ display: 'flex', gap: '15px', marginBottom: '10px' }}>
+              <div style={{ width: '120px' }}><label style={{ fontSize: '12px', color: '#888' }}>Tempo (Minutos):</label><input type="number" value={tempoAviso1} onChange={(e) => setTempoAviso1(parseInt(e.target.value, 10) || 0)} style={{ width: '100%', padding: '6px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid #444', borderRadius: '4px' }} /></div>
+              <div style={{ flex: 1 }}><label style={{ fontSize: '12px', color: '#888' }}>Mensagem:</label><input type="text" value={mensagem1} onChange={(e) => setMensagem1(e.target.value)} style={{ width: '100%', padding: '6px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid #444', borderRadius: '4px' }} /></div>
+            </div>
+          </div>
+
+          <div style={{ border: '1px solid #2d2d2d', padding: '15px', borderRadius: '6px', marginBottom: '20px' }}>
+            <h3 style={{ margin: '0 0 10px 0', fontSize: '15px', color: '#e67e22' }}>Segundo Alerta RCON (Urgência)</h3>
+            <div style={{ display: 'flex', gap: '15px', marginBottom: '10px' }}>
+              <div style={{ width: '120px' }}><label style={{ fontSize: '12px', color: '#888' }}>Tempo (Minutos):</label><input type="number" value={tempoAviso2} onChange={(e) => setTempoAviso2(parseInt(e.target.value, 10) || 0)} style={{ width: '100%', padding: '6px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid #444', borderRadius: '4px' }} /></div>
+              <div style={{ flex: 1 }}><label style={{ fontSize: '12px', color: '#888' }}>Mensagem:</label><input type="text" value={mensagem2} onChange={(e) => setMensagem2(e.target.value)} style={{ width: '100%', padding: '6px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid #444', borderRadius: '4px' }} /></div>
+            </div>
+          </div>
+
+          <button type="submit" style={{ padding: '10px 20px', borderRadius: '4px', border: 'none', backgroundColor: '#2ecc71', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>💾 Gravar Regras de Agendamento</button>
+        </form>
+      )}
+
+    </div>
+  );
+}

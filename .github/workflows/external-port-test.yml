@@ -1,0 +1,80 @@
+name: External Conan Port Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      host:
+        description: "IP público ou domínio do servidor"
+        required: true
+        default: "SEU_IP_PUBLICO"
+      tcp_port:
+        description: "Porta TCP para testar"
+        required: true
+        default: "25575"
+      steam_query_port:
+        description: "Porta UDP Steam Query"
+        required: true
+        default: "27015"
+      expected_name:
+        description: "Parte do nome esperado do servidor"
+        required: false
+        default: ""
+
+jobs:
+  test-ports:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Show target
+        run: |
+          echo "Host: ${{ github.event.inputs.host }}"
+          echo "TCP port: ${{ github.event.inputs.tcp_port }}"
+          echo "Steam Query UDP port: ${{ github.event.inputs.steam_query_port }}"
+
+      - name: Test TCP port
+        shell: bash
+        run: |
+          set +e
+          nc -vz -w 8 "${{ github.event.inputs.host }}" "${{ github.event.inputs.tcp_port }}"
+          CODE=$?
+
+          if [ "$CODE" -eq 0 ]; then
+            echo "✅ TCP externo respondeu."
+          else
+            echo "⚠️ TCP externo não respondeu."
+            echo "Isso pode indicar firewall, roteador sem redirecionamento, CGNAT ou bloqueio da operadora."
+          fi
+
+          exit 0
+
+      - name: Test Steam Query UDP
+        shell: bash
+        run: |
+          python3 -m pip install python-a2s
+
+          python3 - <<'PY'
+          import a2s
+
+          host = "${{ github.event.inputs.host }}"
+          port = int("${{ github.event.inputs.steam_query_port }}")
+          expected = "${{ github.event.inputs.expected_name }}".strip().lower()
+
+          print(f"Testando Steam Query UDP em {host}:{port}...")
+
+          try:
+              info = a2s.info((host, port), timeout=8.0)
+              print("✅ Steam Query externo respondeu.")
+              print(f"Nome: {info.server_name}")
+              print(f"Mapa: {info.map_name}")
+              print(f"Players: {info.player_count}/{info.max_players}")
+
+              if expected:
+                  if expected in info.server_name.lower():
+                      print("✅ Nome esperado encontrado.")
+                  else:
+                      print("⚠️ Steam Query respondeu, mas o nome esperado não bateu.")
+          except Exception as e:
+              print("⚠️ Steam Query UDP externo não respondeu.")
+              print(f"Erro: {e}")
+              print("Possíveis causas: porta UDP bloqueada, roteador, firewall, CGNAT ou servidor ainda iniciando.")
+          PY
