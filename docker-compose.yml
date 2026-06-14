@@ -1,0 +1,41 @@
+services:
+  conan-exiles-enhanced:
+    image: indifferentbroccoli/conan-exiles-enhanced-server-docker
+    restart: unless-stopped
+    container_name: conan-exiles-enhanced
+    stop_grace_period: 30s
+    ports:
+      - 7777:7777/udp
+      - 7778:7778/udp
+      - 27015:27015/udp
+      - 25575:25575/tcp
+    env_file:
+      - .env
+    volumes:
+      - ./server-files:/home/steam/server-files
+
+  conan-web-panel:
+    build: ./painel-web
+    container_name: conan-web-panel
+    restart: unless-stopped
+    expose:
+      - "3000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./:/app/conan-server-root
+      - ./painel-web:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=production
+
+  conan-panel-auth:
+    image: nginx:alpine
+    container_name: conan-panel-auth
+    restart: unless-stopped
+    depends_on:
+      - conan-web-panel
+    ports:
+      - 3000:80
+    volumes:
+      - ./nginx-auth/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx-auth/.htpasswd:/etc/nginx/.htpasswd:ro

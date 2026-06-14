@@ -12,6 +12,7 @@ import ModsManager from './components/ModsManager';
 
 import { useEffect, useState } from 'react';
 import BackupManager from './components/BackupManager';
+import ExternalPortTestCard from "./components/ExternalPortTestCard";
 
 export default function HomePage() {
     const [activeTab, setActiveTab] = useState<'dash' | 'logs' | 'alerts' | 'backups' | 'updates' | 'mods'>('dash');
@@ -309,7 +310,7 @@ export default function HomePage() {
         }
     };
 
-    if (loading) return <div style={{ background: '#111', color: '#fff', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><h2>Iniciando Painel de Controle CONAN SERVER...</h2></div>
+    if (loading) return <div style={{ background: '#111', color: '#fff', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><h2>Iniciando Painel de Controle ISKAGAMES...</h2></div>
 
     return (
         <div style={{ padding: '30px', fontFamily: 'sans-serif', backgroundColor: '#111', color: '#fff', minHeight: '100vh' }}>
@@ -317,7 +318,7 @@ export default function HomePage() {
             {/* TOP DE COMANDO E ENERGIA */}
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #333', paddingBottom: '20px' }}>
                 <div>
-                    <h1 style={{ margin: 0, color: '#f39c12' }}>CONAN DOCKER CONTROL</h1>
+                    <h1 style={{ margin: 0, color: '#f39c12' }}>ISKAGAMES CONTROL</h1>
                     <p style={{ margin: '5px 0 0', color: '#888' }}>Gerenciamento Unificado • Linux Docker Engine</p>
                 </div>
 
@@ -383,6 +384,7 @@ export default function HomePage() {
                         <DashboardSummary />
 
                         <NetworkStatus />
+        <ExternalPortTestCard />
 
 
                         <h2 style={{ marginTop: 0, color: '#f39c12', borderBottom: '1px solid #333', paddingBottom: '10px', fontSize: '18px' }}>Configurações do Servidor (.env + ServerSettings.ini)</h2>
@@ -434,7 +436,7 @@ export default function HomePage() {
                             </form>
                             <div style={{ maxHeight: '220px', overflowY: 'auto' }}>
                                 {mods.map((id) => (
-                                    <div key=***REMOVIDO***
+                                    <div key={id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: '#252525', borderRadius: '4px', marginBottom: '6px', border: '1px solid #333' }}>
                                         <span style={{ fontFamily: 'monospace' }}>🛠️ {id}</span>
                                         <button onClick={() => { const n = mods.filter(m => m !== id); setMods(n); salvarConfiguracoes(n); }} style={{ background: 'none', border: 'none', color: '#e74c3c', cursor: 'pointer' }}>❌</button>
                                     </div>
