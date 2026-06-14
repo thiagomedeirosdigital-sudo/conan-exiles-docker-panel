@@ -35,6 +35,7 @@ export default function HomePage() {
     const [modsLoading, setModsLoading] = useState(false);
     const [novoModId, setNovoModId] = useState('');
     const [textoRcon, setTextoRcon] = useState('');
+    const [privacyMode, setPrivacyMode] = useState(false);
 
     // Estado de Alertas Customizados
     const [restartAtivo, setRestartAtivo] = useState(false);
@@ -150,6 +151,22 @@ export default function HomePage() {
         }
     };
     return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+        const updatePrivacy = () => {
+            setPrivacyMode(localStorage.getItem('conanPrivacyMode') === '1');
+        };
+
+        updatePrivacy();
+
+        window.addEventListener('storage', updatePrivacy);
+        window.addEventListener('conan-privacy-change', updatePrivacy);
+
+        return () => {
+            window.removeEventListener('storage', updatePrivacy);
+            window.removeEventListener('conan-privacy-change', updatePrivacy);
+        };
     }, []);
 
     // Monitor de Logs dinâmico quando a aba Logs é selecionada
@@ -390,13 +407,13 @@ export default function HomePage() {
                         <h2 style={{ marginTop: 0, color: '#f39c12', borderBottom: '1px solid #333', paddingBottom: '10px', fontSize: '18px' }}>Configurações do Servidor (.env + ServerSettings.ini)</h2>
                         
                         <div style={{ marginBottom: '12px' }}><label style={{ color: '#aaa', display: 'block', marginBottom: '4px' }}>Nome do Servidor:</label>
-                            <input type="text" value={serverName} onChange={(e) => setServerName(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #444', backgroundColor: '#2a2a2a', color: '#fff' }} />
+                            <input type="text" value={privacyMode ? '*** oculto ***' : serverName} disabled={privacyMode} onChange={(e) => setServerName(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #444', backgroundColor: privacyMode ? '#1f2937' : '#2a2a2a', color: '#fff' }} />
                         </div>
                         <div style={{ marginBottom: '12px' }}><label style={{ color: '#aaa', display: 'block', marginBottom: '4px' }}>Senha Admin:</label>
-                            <input type="text" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #444', backgroundColor: '#2a2a2a', color: '#fff' }} />
+                            <input type={privacyMode ? 'password' : 'text'} value={privacyMode ? '********' : adminPassword} disabled={privacyMode} onChange={(e) => setAdminPassword(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #444', backgroundColor: privacyMode ? '#1f2937' : '#2a2a2a', color: '#fff' }} />
                         </div>
                         <div style={{ marginBottom: '12px' }}><label style={{ color: '#aaa', display: 'block', marginBottom: '4px' }}>Senha RCON:</label>
-                            <input type="text" value={rconPassword} onChange={(e) => setRconPassword(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #444', backgroundColor: '#2a2a2a', color: '#fff' }} />
+                            <input type={privacyMode ? 'password' : 'text'} value={privacyMode ? '********' : rconPassword} disabled={privacyMode} onChange={(e) => setRconPassword(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #444', backgroundColor: privacyMode ? '#1f2937' : '#2a2a2a', color: '#fff' }} />
                         </div>
                         
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>

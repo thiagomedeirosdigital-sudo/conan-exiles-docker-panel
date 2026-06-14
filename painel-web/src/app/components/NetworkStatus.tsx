@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 export default function NetworkStatus() {
   const [network, setNetwork] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [privacyMode, setPrivacyMode] = useState(false);
 
   async function carregarNetwork() {
     setLoading(true);
@@ -24,6 +25,22 @@ export default function NetworkStatus() {
     carregarNetwork();
     const interval = setInterval(carregarNetwork, 30000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const updatePrivacy = () => {
+      setPrivacyMode(localStorage.getItem('conanPrivacyMode') === '1');
+    };
+
+    updatePrivacy();
+
+    window.addEventListener('storage', updatePrivacy);
+    window.addEventListener('conan-privacy-change', updatePrivacy);
+
+    return () => {
+      window.removeEventListener('storage', updatePrivacy);
+      window.removeEventListener('conan-privacy-change', updatePrivacy);
+    };
   }, []);
 
   const cardStyle: React.CSSProperties = {
@@ -105,7 +122,7 @@ export default function NetworkStatus() {
             fontSize: '22px',
             fontWeight: 'bold'
           }}>
-            {network?.publicIp || 'Não detectado'}
+            {privacyMode ? '*** oculto ***' : (network?.publicIp || 'Não detectado')}
           </div>
           <div style={{ color: '#cbd5e1', fontSize: '14px' }}>
             Compare com o IP WAN do roteador
@@ -132,7 +149,7 @@ export default function NetworkStatus() {
             {network?.checks?.steamQueryLocalOk ? 'Respondendo' : 'Sem resposta'}
           </div>
           <div style={{ color: '#cbd5e1', fontSize: '14px' }}>
-            {network?.checks?.serverName || 'Servidor não detectado'}
+            {privacyMode ? '*** oculto ***' : (network?.checks?.serverName || 'Servidor não detectado')}
           </div>
         </div>
       </div>

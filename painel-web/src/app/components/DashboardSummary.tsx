@@ -9,6 +9,7 @@ export default function DashboardSummary() {
   const [updates, setUpdates] = useState<any>(null);
   const [players, setPlayers] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [privacyMode, setPrivacyMode] = useState(false);
 
   const carregar = async () => {
     setLoading(true);
@@ -37,6 +38,29 @@ export default function DashboardSummary() {
     const timer = setInterval(carregar, 30000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    const updatePrivacy = () => {
+      setPrivacyMode(localStorage.getItem('conanPrivacyMode') === '1');
+    };
+
+    updatePrivacy();
+
+    window.addEventListener('storage', updatePrivacy);
+    window.addEventListener('conan-privacy-change', updatePrivacy);
+
+    return () => {
+      window.removeEventListener('storage', updatePrivacy);
+      window.removeEventListener('conan-privacy-change', updatePrivacy);
+    };
+  }, []);
+
+  const togglePrivacyMode = () => {
+    const next = !privacyMode;
+    setPrivacyMode(next);
+    localStorage.setItem('conanPrivacyMode', next ? '1' : '0');
+    window.dispatchEvent(new Event('conan-privacy-change'));
+  };
 
   const ultimoBackup = backups?.safeBackups?.[0];
   const qtdBackups = backups?.safeBackups?.length || 0;
@@ -100,6 +124,29 @@ export default function DashboardSummary() {
         gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
         gap: '12px'
       }}>
+        <div style={{ ...card, border: privacyMode ? '1px solid #f39c12' : '1px solid #333' }}>
+          <div style={label}>Modo Privacidade</div>
+          <div style={{ ...value, color: privacyMode ? '#f39c12' : '#22c55e' }}>
+            {privacyMode ? 'Ativo' : 'Desativado'}
+          </div>
+          <button
+            onClick={togglePrivacyMode}
+            style={{
+              marginTop: '10px',
+              backgroundColor: privacyMode ? '#f39c12' : '#374151',
+              color: privacyMode ? '#111' : '#fff',
+              border: 'none',
+              padding: '8px 10px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              width: '100%'
+            }}
+          >
+            {privacyMode ? '👁️ Mostrar dados' : '🕶️ Ocultar dados'}
+          </button>
+          <div style={small}>Esconde IP público e nome do servidor</div>
+        </div>
         <div style={card}>
           <div style={label}>Status Conan</div>
           <div style={{ ...value, color: stats?.status === 'Online' ? '#22c55e' : '#ef4444' }}>
@@ -147,7 +194,7 @@ export default function DashboardSummary() {
           <div style={{ ...value, color: players?.online?.ok ? '#22c55e' : '#ef4444' }}>
             {playersOnline} / {playersMax}
           </div>
-          <div style={small}>{players?.online?.name || 'Servidor Conan'}</div>
+          <div style={small}>{privacyMode ? '*** oculto ***' : (players?.online?.name || 'Servidor Conan')}</div>
         </div>
 
         <div style={card}>
