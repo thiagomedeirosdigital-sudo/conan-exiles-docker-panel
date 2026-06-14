@@ -15,7 +15,7 @@ import BackupManager from './components/BackupManager';
 import ExternalPortTestCard from "./components/ExternalPortTestCard";
 
 export default function HomePage() {
-    const [activeTab, setActiveTab] = useState<'dash' | 'logs' | 'alerts' | 'backups' | 'updates' | 'mods'>('dash');
+    const [activeTab, setActiveTab] = useState<'dash' | 'logs' | 'alerts' | 'backups' | 'updates' | 'mods' | 'maintenance'>('dash');
     const [loading, setLoading] = useState(true);
     const [powerLoading, setPowerLoading] = useState(false);
     const [feedback, setFeedback] = useState<{ tipo: 'sucesso' | 'erro'; texto: string } | null>(null);

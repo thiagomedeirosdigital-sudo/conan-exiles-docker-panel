@@ -179,7 +179,7 @@ export default function ModsManager() {
               if (!ok) return;
 
               try {
-                await salvarOrdemModsDetalhados();
+                await salvar();
 
                 const res = await fetch('/api/mods/apply', {
                   method: 'POST',
@@ -195,7 +195,7 @@ export default function ModsManager() {
                 }
 
                 alert('Mods aplicados com segurança. Aguarde o servidor terminar de subir e confira os logs.');
-                await carregarModsDetalhados();
+                await carregar();
               } catch {
                 alert('Erro ao aplicar mods com segurança.');
               }
@@ -222,7 +222,7 @@ export default function ModsManager() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {mods.map((mod, index) => (
-          <div key=***REMOVIDO***
+          <div key={mod.modId} style={{ display: 'grid', gridTemplateColumns: '55px 1fr 120px 100px', gap: '12px', alignItems: 'center', padding: '12px', backgroundColor: '#252525', border: '1px solid #333', borderRadius: '6px' }}>
             <div style={{ color: '#f39c12', fontWeight: 'bold' }}>#{index + 1}</div>
 
             <div>
