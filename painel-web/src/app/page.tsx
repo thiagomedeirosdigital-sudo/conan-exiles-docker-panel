@@ -26,6 +26,8 @@ export default function HomePage() {
     const [serverName, setServerName] = useState('');
     const [adminPassword, setAdminPassword] = useState('');
     const [rconPassword, setRconPassword] = useState('');
+    const [adminPasswordConfigured, setAdminPasswordConfigured] = useState(false);
+    const [rconPasswordConfigured, setRconPasswordConfigured] = useState(false);
     const [maxPlayers, setMaxPlayers] = useState(20);
     const [serverRegion, setServerRegion] = useState('4');
     const [maxNudity, setMaxNudity] = useState('2');
@@ -56,8 +58,10 @@ export default function HomePage() {
             fetch('/api/alerts').then(res => res.json())
         ]).then(([configData, alertData]) => {
             setServerName(configData.serverName);
-            setAdminPassword(configData.adminPassword);
-            setRconPassword(configData.rconPassword);
+            setAdminPassword('');
+            setRconPassword('');
+            setAdminPasswordConfigured(Boolean(configData.adminPasswordConfigured));
+            setRconPasswordConfigured(Boolean(configData.rconPasswordConfigured));
             setMaxPlayers(configData.maxPlayers);
             setServerRegion(configData.serverRegion || '4');
             setMaxNudity(configData.maxNudity || '2');
@@ -410,10 +414,10 @@ export default function HomePage() {
                             <input type="text" value={privacyMode ? '*** oculto ***' : serverName} disabled={privacyMode} onChange={(e) => setServerName(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #444', backgroundColor: privacyMode ? '#1f2937' : '#2a2a2a', color: '#fff' }} />
                         </div>
                         <div style={{ marginBottom: '12px' }}><label style={{ color: '#aaa', display: 'block', marginBottom: '4px' }}>Senha Admin:</label>
-                            <input type={privacyMode ? 'password' : 'text'} value={privacyMode ? '********' : adminPassword} disabled={privacyMode} onChange={(e) => setAdminPassword(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #444', backgroundColor: privacyMode ? '#1f2937' : '#2a2a2a', color: '#fff' }} />
+                            <input type="password" value={privacyMode ? '********' : adminPassword} disabled={privacyMode} placeholder={adminPasswordConfigured ? 'Senha já configurada — digite uma nova para trocar' : 'Digite uma senha Admin'} onChange={(e) => setAdminPassword(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #444', backgroundColor: privacyMode ? '#1f2937' : '#2a2a2a', color: '#fff' }} />
                         </div>
                         <div style={{ marginBottom: '12px' }}><label style={{ color: '#aaa', display: 'block', marginBottom: '4px' }}>Senha RCON:</label>
-                            <input type={privacyMode ? 'password' : 'text'} value={privacyMode ? '********' : rconPassword} disabled={privacyMode} onChange={(e) => setRconPassword(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #444', backgroundColor: privacyMode ? '#1f2937' : '#2a2a2a', color: '#fff' }} />
+                            <input type="password" value={privacyMode ? '********' : rconPassword} disabled={privacyMode} placeholder={rconPasswordConfigured ? 'Senha já configurada — digite uma nova para trocar' : 'Digite uma senha RCON'} onChange={(e) => setRconPassword(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #444', backgroundColor: privacyMode ? '#1f2937' : '#2a2a2a', color: '#fff' }} />
                         </div>
                         
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>

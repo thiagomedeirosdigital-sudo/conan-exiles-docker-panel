@@ -106,8 +106,8 @@ export async function GET() {
 
     return NextResponse.json({
       serverName: envConfig['SERVER_NAME'] || iniConfig['ServerName'] || 'Não definido',
-      adminPassword: envConfig['ADMIN_PASSWORD'] || iniConfig['AdminPassword'] || '',
-      rconPassword: envConfig['RCON_PASSWORD'] || '',
+      adminPasswordConfigured: Boolean(envConfig['ADMIN_PASSWORD'] || iniConfig['AdminPassword']),
+      rconPasswordConfigured: Boolean(envConfig['RCON_PASSWORD']),
       maxPlayers: parseInt(envConfig['MAX_PLAYERS'] || iniConfig['MaxPlayers'] || '20', 10),
       serverRegion: envConfig['SERVER_REGION'] || iniConfig['serverRegion'] || '4',
       maxNudity: envConfig['MaxNudity'] || iniConfig['MaxNudity'] || '2',
@@ -127,8 +127,8 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     const serverName = cleanString(body.serverName);
-    const adminPassword = cleanString(body.adminPassword);
-    const rconPassword = cleanString(body.rconPassword);
+    const adminPasswordInput = cleanString(body.adminPassword);
+    const rconPasswordInput = cleanString(body.rconPassword);
     const maxPlayers = cleanNumber(body.maxPlayers, 20, 1, 100);
     const serverRegion = cleanString(body.serverRegion || '4');
     const maxNudity = cleanString(body.maxNudity || body.nudityLevel || '2');
@@ -144,6 +144,16 @@ export async function POST(request: Request) {
     }
 
     const envContent = await fs.readFile(envPath, 'utf-8');
+    const currentEnvConfig = parseKeyValueFile(envContent);
+
+    let currentIniConfig: Record<string, string> = {};
+    if (fsSync.existsSync(serverSettingsPath)) {
+      const currentIniContent = await fs.readFile(serverSettingsPath, 'utf-8');
+      currentIniConfig = parseKeyValueFile(currentIniContent);
+    }
+
+    const adminPassword = adminPasswordInput || currentEnvConfig['ADMIN_PASSWORD'] || currentIniConfig['AdminPassword'] || '';
+    const rconPassword = rconPasswordInput || currentEnvConfig['RCON_PASSWORD'] || '';
 
     const envUpdates: Record<string, string> = {
       SERVER_NAME: serverName,
