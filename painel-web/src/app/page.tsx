@@ -387,6 +387,114 @@ export default function HomePage() {
                 </div>
             )}
 
+
+            {/* ACOES RAPIDAS DO DASHBOARD */}
+            <section style={{
+                backgroundColor: '#1e1e1e',
+                border: '1px solid #333',
+                borderRadius: '10px',
+                padding: '18px',
+                marginBottom: '22px'
+            }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '15px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '14px' }}>
+                    <div>
+                        <h2 style={{ margin: 0, color: '#f39c12', fontSize: '20px' }}>⚡ Ações Rápidas</h2>
+                        <p style={{ margin: '6px 0 0', color: '#aaa', fontSize: '13px' }}>
+                            Atalhos para as tarefas mais usadas do servidor. Ações críticas continuam com confirmação.
+                        </p>
+                    </div>
+                </div>
+
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+                    gap: '12px'
+                }}>
+                    <button
+                        onClick={handleSafeRestart}
+                        disabled={powerLoading}
+                        style={{
+                            padding: '14px',
+                            borderRadius: '8px',
+                            border: '1px solid #166534',
+                            backgroundColor: powerLoading ? '#374151' : '#14532d',
+                            color: '#fff',
+                            fontWeight: 'bold',
+                            cursor: powerLoading ? 'wait' : 'pointer',
+                            textAlign: 'left'
+                        }}
+                    >
+                        <div style={{ fontSize: '16px' }}>🛡️ Reinício Seguro</div>
+                        <div style={{ color: '#bbf7d0', fontSize: '12px', marginTop: '6px' }}>
+                            Backup + restart controlado do Conan
+                        </div>
+                    </button>
+
+                    <button
+                        onClick={verificarUpdatesAgora}
+                        disabled={updateLoading}
+                        style={{
+                            padding: '14px',
+                            borderRadius: '8px',
+                            border: '1px solid #854d0e',
+                            backgroundColor: updateLoading ? '#374151' : '#2a2112',
+                            color: '#fff',
+                            fontWeight: 'bold',
+                            cursor: updateLoading ? 'wait' : 'pointer',
+                            textAlign: 'left'
+                        }}
+                    >
+                        <div style={{ fontSize: '16px' }}>🔎 Verificar Updates</div>
+                        <div style={{ color: '#fde68a', fontSize: '12px', marginTop: '6px' }}>
+                            Consulta atualizações de mods/servidor
+                        </div>
+                    </button>
+
+                    <a
+                        href="https://github.com/thiagomedeirosdigital-sudo/conan-exiles-docker-panel/actions/workflows/external-port-test.yml"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                            padding: '14px',
+                            borderRadius: '8px',
+                            border: '1px solid #1d4ed8',
+                            backgroundColor: '#172554',
+                            color: '#fff',
+                            fontWeight: 'bold',
+                            textDecoration: 'none',
+                            textAlign: 'left'
+                        }}
+                    >
+                        <div style={{ fontSize: '16px' }}>🌎 Teste Externo</div>
+                        <div style={{ color: '#bfdbfe', fontSize: '12px', marginTop: '6px' }}>
+                            Valida portas pelo GitHub Actions
+                        </div>
+                    </a>
+
+                    <button
+                        onClick={() => {
+                            setTextoRcon('Atenção jogadores: manutenção programada em breve. Finalizem suas ações com segurança.');
+                            setFeedback({ tipo: 'sucesso', texto: 'Comunicado preparado no campo RCON. Revise e clique em Enviar.' });
+                        }}
+                        style={{
+                            padding: '14px',
+                            borderRadius: '8px',
+                            border: '1px solid #0369a1',
+                            backgroundColor: '#0c4a6e',
+                            color: '#fff',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            textAlign: 'left'
+                        }}
+                    >
+                        <div style={{ fontSize: '16px' }}>📣 Preparar Comunicado</div>
+                        <div style={{ color: '#bae6fd', fontSize: '12px', marginTop: '6px' }}>
+                            Preenche uma mensagem RCON segura
+                        </div>
+                    </button>
+                </div>
+            </section>
+
             {/* NAVEGAÇÃO POR ABAS */}
             <nav style={{ display: 'flex', gap: '10px', marginBottom: '25px' }}>
                 <button onClick={() => setActiveTab('dash')} style={{ padding: '10px 20px', borderRadius: '4px', border: 'none', backgroundColor: activeTab === 'dash' ? '#f39c12' : '#222', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>Dashboard</button>
