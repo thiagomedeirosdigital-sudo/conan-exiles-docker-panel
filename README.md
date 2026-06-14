@@ -39,6 +39,16 @@ scripts/ - Scripts de backup, restart e update
 painel-web/ - Código do painel Next.js  
 .github/workflows/ - Testes externos via GitHub Actions  
 
+## Teste externo de portas
+
+O workflow **External Conan Port Test** testa o servidor de fora da rede local usando GitHub Actions.
+
+Interpretação recomendada:
+
+- **Steam Query UDP respondeu:** o servidor está visível externamente.
+- **TCP/RCON falhou, mas Steam Query respondeu:** normalmente não é problema para jogadores. RCON fechado externamente pode ser mais seguro.
+- **Steam Query UDP falhou:** investigue roteador, firewall, redirecionamento UDP, CGNAT, operadora ou IP público.
+
 ## Segurança
 
 Nunca publique:
