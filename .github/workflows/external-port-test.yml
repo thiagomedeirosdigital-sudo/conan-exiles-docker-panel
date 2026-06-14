@@ -8,7 +8,7 @@ on:
         required: true
         default: "SEU_IP_PUBLICO"
       tcp_port:
-        description: "Porta TCP para testar"
+        description: "Porta TCP opcional para teste. Ex: RCON 25575"
         required: true
         default: "25575"
       steam_query_port:
@@ -27,54 +27,81 @@ jobs:
     steps:
       - name: Show target
         run: |
+          echo "===== ALVO DO TESTE ====="
           echo "Host: ${{ github.event.inputs.host }}"
-          echo "TCP port: ${{ github.event.inputs.tcp_port }}"
-          echo "Steam Query UDP port: ${{ github.event.inputs.steam_query_port }}"
+          echo "TCP opcional: ${{ github.event.inputs.tcp_port }}"
+          echo "Steam Query UDP: ${{ github.event.inputs.steam_query_port }}"
+          echo ""
+          echo "Observação: a porta TCP 25575 geralmente é RCON."
+          echo "Se ela falhar, isso não significa automaticamente que jogadores não conseguem entrar."
+          echo "Por segurança, RCON pode ficar fechado externamente."
 
-      - name: Test TCP port
+      - name: Test optional TCP port
         shell: bash
         run: |
           set +e
+          echo "===== TESTE TCP OPCIONAL ====="
+          echo "Testando TCP em ${{ github.event.inputs.host }}:${{ github.event.inputs.tcp_port }}..."
           nc -vz -w 8 "${{ github.event.inputs.host }}" "${{ github.event.inputs.tcp_port }}"
           CODE=$?
-
+          echo ""
           if [ "$CODE" -eq 0 ]; then
             echo "✅ TCP externo respondeu."
+            echo "Essa porta TCP está acessível de fora."
           else
             echo "⚠️ TCP externo não respondeu."
-            echo "Isso pode indicar firewall, roteador sem redirecionamento, CGNAT ou bloqueio da operadora."
+            echo ""
+            echo "Interpretação:"
+            echo "- Se essa porta for RCON 25575, isso pode ser desejável por segurança."
+            echo "- Falha no TCP/RCON não significa automaticamente que o servidor está offline para jogadores."
+            echo "- Para jogadores, o teste mais importante é Steam Query UDP e as portas UDP do jogo."
           fi
-
           exit 0
 
       - name: Test Steam Query UDP
         shell: bash
         run: |
+          echo "===== TESTE STEAM QUERY UDP ====="
           python3 -m pip install python-a2s
-
           python3 - <<'PY'
           import a2s
-
           host = "${{ github.event.inputs.host }}"
           port = int("${{ github.event.inputs.steam_query_port }}")
           expected = "${{ github.event.inputs.expected_name }}".strip().lower()
-
           print(f"Testando Steam Query UDP em {host}:{port}...")
-
+          print("")
           try:
               info = a2s.info((host, port), timeout=8.0)
               print("✅ Steam Query externo respondeu.")
+              print("")
+              print("Resultado:")
               print(f"Nome: {info.server_name}")
               print(f"Mapa: {info.map_name}")
               print(f"Players: {info.player_count}/{info.max_players}")
-
+              print("")
               if expected:
                   if expected in info.server_name.lower():
                       print("✅ Nome esperado encontrado.")
                   else:
                       print("⚠️ Steam Query respondeu, mas o nome esperado não bateu.")
+              print("")
+              print("Conclusão:")
+              print("✅ O servidor está visível externamente pela consulta Steam Query.")
+              print("✅ Isso é um forte sinal de que o servidor está acessível pela internet.")
+              print("⚠️ Se jogadores ainda não conectarem, verifique portas UDP 7777/7778, firewall do roteador e configurações do jogo.")
           except Exception as e:
-              print("⚠️ Steam Query UDP externo não respondeu.")
+              print("❌ Steam Query UDP externo não respondeu.")
               print(f"Erro: {e}")
-              print("Possíveis causas: porta UDP bloqueada, roteador, firewall, CGNAT ou servidor ainda iniciando.")
+              print("")
+              print("Conclusão:")
+              print("⚠️ O servidor não respondeu externamente na porta Steam Query.")
+              print("Possíveis causas: UDP 27015 não redirecionada, firewall, CGNAT, operadora, IP errado ou servidor iniciando.")
           PY
+
+      - name: Final interpretation
+        run: |
+          echo "===== COMO INTERPRETAR ====="
+          echo ""
+          echo "✅ Steam Query UDP respondeu: servidor visível externamente."
+          echo "⚠️ TCP/RCON falhou, mas Steam Query respondeu: normalmente não é problema para jogadores."
+          echo "❌ Steam Query UDP falhou: investigue roteador, firewall, CGNAT, operadora ou IP público."
