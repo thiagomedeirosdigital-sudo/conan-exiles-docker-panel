@@ -14,7 +14,7 @@ import { useEffect, useState } from 'react';
 import BackupManager from './components/BackupManager';
 
 export default function HomePage() {
-    const [activeTab, setActiveTab] = useState<'dash' | 'logs' | 'alerts' | 'backups' | 'updates' | 'mods' | 'maintenance'>('dash');
+    const [activeTab, setActiveTab] = useState<'dash' | 'modsUpdates' | 'backups' | 'automation' | 'diagnostics' | 'settings'>('dash');
     const [loading, setLoading] = useState(true);
     const [powerLoading, setPowerLoading] = useState(false);
     const [feedback, setFeedback] = useState<{ tipo: 'sucesso' | 'erro'; texto: string } | null>(null);
@@ -174,7 +174,7 @@ export default function HomePage() {
 
     // Monitor de Logs dinâmico quando a aba Logs é selecionada
     useEffect(() => {
-        if (activeTab === 'logs') {
+        if (activeTab === 'diagnostics') {
             setServerLogs('Buscando logs recentes...');
             fetch('/api/logs')
                 .then(res => res.json())
@@ -478,26 +478,28 @@ export default function HomePage() {
             </section>
 
             {/* NAVEGAÇÃO POR ABAS */}
-            <nav style={{ display: 'flex', gap: '10px', marginBottom: '25px' }}>
+            <nav style={{ display: 'flex', gap: '10px', marginBottom: '25px', flexWrap: 'wrap' }}>
                 <button onClick={() => setActiveTab('dash')} style={{ padding: '10px 20px', borderRadius: '4px', border: 'none', backgroundColor: activeTab === 'dash' ? '#f39c12' : '#222', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>Dashboard</button>
-                <button onClick={() => setActiveTab('logs')} style={{ padding: '10px 20px', borderRadius: '4px', border: 'none', backgroundColor: activeTab === 'logs' ? '#f39c12' : '#222', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>Logs</button>
-                <button onClick={() => setActiveTab('alerts')} style={{ padding: '10px 20px', borderRadius: '4px', border: 'none', backgroundColor: activeTab === 'alerts' ? '#f39c12' : '#222', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>Alertas</button>
+                <button onClick={() => setActiveTab('modsUpdates')} style={{ padding: '10px 20px', borderRadius: '4px', border: 'none', backgroundColor: activeTab === 'modsUpdates' ? '#f39c12' : '#222', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>Mods e Atualizações</button>
                 <button onClick={() => setActiveTab('backups')} style={{ padding: '10px 20px', borderRadius: '4px', border: 'none', backgroundColor: activeTab === 'backups' ? '#f39c12' : '#222', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>Backups</button>
-                <button onClick={() => setActiveTab('updates')} style={{ padding: '10px 20px', borderRadius: '4px', border: 'none', backgroundColor: activeTab === 'updates' ? '#f39c12' : '#222', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>Atualizações</button>
-                <button onClick={() => setActiveTab('mods')} style={{ padding: '10px 20px', borderRadius: '4px', border: 'none', backgroundColor: activeTab === 'mods' ? '#f39c12' : '#222', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>Mods</button>
-                <button onClick={() => setActiveTab('maintenance')} style={{ padding: '10px 20px', borderRadius: '4px', border: 'none', backgroundColor: activeTab === 'maintenance' ? '#f39c12' : '#222', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>Manutenção</button>
+                <button onClick={() => setActiveTab('automation')} style={{ padding: '10px 20px', borderRadius: '4px', border: 'none', backgroundColor: activeTab === 'automation' ? '#f39c12' : '#222', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>Automação</button>
+                <button onClick={() => setActiveTab('diagnostics')} style={{ padding: '10px 20px', borderRadius: '4px', border: 'none', backgroundColor: activeTab === 'diagnostics' ? '#f39c12' : '#222', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>Diagnóstico</button>
+                <button onClick={() => setActiveTab('settings')} style={{ padding: '10px 20px', borderRadius: '4px', border: 'none', backgroundColor: activeTab === 'settings' ? '#f39c12' : '#222', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>Configurações</button>
             </nav>
 
             {/* CONTEÚDO DAS ABAS */}
-            {activeTab === 'dash' && (
+            {(activeTab === 'dash' || activeTab === 'settings') && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '25px', alignItems: 'start' }}>
                     <div style={{ backgroundColor: '#1e1e1e', padding: '20px', borderRadius: '8px', border: '1px solid #333' }}>
-                        <DashboardSummary />
+                        <div style={{ display: activeTab === 'dash' ? 'block' : 'none' }}>
+                            <DashboardSummary />
 
-                        <NetworkStatus />
+                            <NetworkStatus />
+                        </div>
 
 
 
+                        <div style={{ display: activeTab === 'settings' ? 'block' : 'none' }}>
                         <h2 style={{ marginTop: 0, color: '#f39c12', borderBottom: '1px solid #333', paddingBottom: '10px', fontSize: '18px' }}>Configurações do Servidor (.env + ServerSettings.ini)</h2>
                         
                         <div style={{ marginBottom: '12px' }}><label style={{ color: '#aaa', display: 'block', marginBottom: '4px' }}>Nome do Servidor:</label>
@@ -536,9 +538,10 @@ export default function HomePage() {
                             </div>
                         </div>
                         <button onClick={() => salvarConfiguracoes()} style={{ width: '100%', padding: '10px', borderRadius: '4px', border: 'none', backgroundColor: '#e67e22', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>Salvar Configurações</button>
+                        </div>
                     </div>
 
-                    <div>
+                    <div style={{ display: activeTab === 'dash' ? 'block' : 'none' }}>
                         <div style={{ display: 'none', backgroundColor: '#1e1e1e', padding: '20px', borderRadius: '8px', border: '1px solid #333' }}>
                             <h2 style={{ marginTop: 0, color: '#f39c12', borderBottom: '1px solid #333', paddingBottom: '10px', fontSize: '18px' }}>Modlist Modificável</h2>
                             <form onSubmit={(e) => { e.preventDefault(); const n = [...mods, novoModId.trim()]; setMods(n); setNovoModId(''); salvarConfiguracoes(n); }} style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
@@ -567,17 +570,21 @@ export default function HomePage() {
                 </div>
             )}
 
-            {activeTab === 'logs' && (
-                <div style={{ backgroundColor: '#151515', padding: '20px', borderRadius: '8px', border: '1px solid #333', fontFamily: 'monospace', minHeight: '450px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', borderBottom: '1px solid #222', paddingBottom: '10px' }}>
-                        <span style={{ color: '#2ecc71' }}>💻 stdout@conan-server-console</span>
-                        <button onClick={() => { setServerLogs('Atualizando...'); fetch('/api/logs').then(res => res.json()).then(data => setServerLogs(data.logs)); }} style={{ background: '#333', border: 'none', color: '#fff', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>Atualizar</button>
+            {activeTab === 'diagnostics' && (
+                <div style={{ display: 'grid', gap: '20px' }}>
+                    <MaintenanceManager />
+
+                    <div style={{ backgroundColor: '#151515', padding: '20px', borderRadius: '8px', border: '1px solid #333', fontFamily: 'monospace', minHeight: '450px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', borderBottom: '1px solid #222', paddingBottom: '10px' }}>
+                            <span style={{ color: '#2ecc71' }}>💻 stdout@conan-server-console</span>
+                            <button onClick={() => { setServerLogs('Atualizando...'); fetch('/api/logs').then(res => res.json()).then(data => setServerLogs(data.logs)); }} style={{ background: '#333', border: 'none', color: '#fff', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>Atualizar</button>
+                        </div>
+                        <pre style={{ whiteSpace: 'pre-wrap', color: '#bbb', margin: 0, fontSize: '13px', maxHeight: '400px', overflowY: 'auto' }}>{serverLogs}</pre>
                     </div>
-                    <pre style={{ whiteSpace: 'pre-wrap', color: '#bbb', margin: 0, fontSize: '13px', maxHeight: '400px', overflowY: 'auto' }}>{serverLogs}</pre>
                 </div>
             )}
 
-            {activeTab === 'alerts' && (
+            {activeTab === 'automation' && (
                 <form onSubmit={salvarAlertas} style={{ backgroundColor: '#1e1e1e', padding: '25px', borderRadius: '8px', border: '1px solid #333', maxWidth: '760px' }}>
                     <h2 style={{ marginTop: 0, color: '#f39c12', borderBottom: '1px solid #333', paddingBottom: '10px', fontSize: '18px' }}>Restart Automático Seguro</h2>
 
@@ -632,11 +639,12 @@ export default function HomePage() {
             )}
 
 
-            {activeTab === 'updates' && <UpdatesManager />}
-
-            {activeTab === 'mods' && <ModsManager />}
-
-            {activeTab === 'maintenance' && <MaintenanceManager />}
+            {activeTab === 'modsUpdates' && (
+                <div style={{ display: 'grid', gap: '20px' }}>
+                    <UpdatesManager />
+                    <ModsManager />
+                </div>
+            )}
 
             {activeTab === 'backups' && (
                 <BackupManager />
