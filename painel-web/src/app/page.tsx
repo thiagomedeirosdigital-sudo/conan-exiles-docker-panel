@@ -489,7 +489,7 @@ export default function HomePage() {
 
             {/* CONTEÚDO DAS ABAS */}
             {(activeTab === 'dash' || activeTab === 'settings') && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '25px', alignItems: 'start' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: activeTab === 'settings' ? '1fr' : '1fr 1fr', gap: '25px', alignItems: 'start' }}>
                     <div style={{ backgroundColor: '#1e1e1e', padding: '20px', borderRadius: '8px', border: '1px solid #333' }}>
                         <div style={{ display: activeTab === 'dash' ? 'block' : 'none' }}>
                             <DashboardSummary />
@@ -500,11 +500,22 @@ export default function HomePage() {
 
 
                         <div style={{ display: activeTab === 'settings' ? 'block' : 'none' }}>
-                        <h2 style={{ marginTop: 0, color: '#f39c12', borderBottom: '1px solid #333', paddingBottom: '10px', fontSize: '18px' }}>Configurações do Servidor (.env + ServerSettings.ini)</h2>
+                        {/* CONFIGURACOES_LAYOUT_V2 */}
+                        <h2 style={{ marginTop: 0, color: '#f39c12', borderBottom: '1px solid #333', paddingBottom: '10px', fontSize: '22px' }}>⚙️ Configurações do Servidor</h2>
+                        <p style={{ color: '#aaa', fontSize: '14px', marginTop: '-2px', marginBottom: '18px' }}>
+                            Ajuste informações principais do Conan. Senhas ficam protegidas e não são exibidas pela API.
+                        </p>
+
+                        <div style={{ background: '#151515', border: '1px solid #333', borderRadius: '8px', padding: '14px', marginBottom: '16px' }}>
+                            <h3 style={{ marginTop: 0, color: '#f39c12', fontSize: '16px' }}>🖥️ Servidor</h3>
                         
                         <div style={{ marginBottom: '12px' }}><label style={{ color: '#aaa', display: 'block', marginBottom: '4px' }}>Nome do Servidor:</label>
                             <input type="text" value={privacyMode ? '*** oculto ***' : serverName} disabled={privacyMode} onChange={(e) => setServerName(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #444', backgroundColor: privacyMode ? '#1f2937' : '#2a2a2a', color: '#fff' }} />
                         </div>
+                        </div>
+
+                        <div style={{ background: '#151515', border: '1px solid #333', borderRadius: '8px', padding: '14px', marginBottom: '16px' }}>
+                            <h3 style={{ marginTop: 0, color: '#f39c12', fontSize: '16px' }}>🔐 Segurança</h3>
                         <div style={{ marginBottom: '12px' }}><label style={{ color: '#aaa', display: 'block', marginBottom: '4px' }}>Senha Admin:</label>
                             <input type="password" value={privacyMode ? '********' : adminPassword} disabled={privacyMode} placeholder={adminPasswordConfigured ? 'Senha já configurada — digite uma nova para trocar' : 'Digite uma senha Admin'} onChange={(e) => setAdminPassword(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #444', backgroundColor: privacyMode ? '#1f2937' : '#2a2a2a', color: '#fff' }} />
                         </div>
@@ -512,6 +523,10 @@ export default function HomePage() {
                             <input type="password" value={privacyMode ? '********' : rconPassword} disabled={privacyMode} placeholder={rconPasswordConfigured ? 'Senha já configurada — digite uma nova para trocar' : 'Digite uma senha RCON'} onChange={(e) => setRconPassword(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #444', backgroundColor: privacyMode ? '#1f2937' : '#2a2a2a', color: '#fff' }} />
                         </div>
                         
+                        </div>
+
+                        <div style={{ background: '#151515', border: '1px solid #333', borderRadius: '8px', padding: '14px', marginBottom: '16px' }}>
+                            <h3 style={{ marginTop: 0, color: '#f39c12', fontSize: '16px' }}>🎮 Jogabilidade</h3>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
                             <div><label style={{ color: '#aaa', display: 'block', marginBottom: '4px' }}>Slots:</label>
                                 <input type="number" value={maxPlayers} onChange={(e) => setMaxPlayers(parseInt(e.target.value, 10) || 0)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #444', backgroundColor: '#2a2a2a', color: '#fff' }} />
@@ -537,7 +552,9 @@ export default function HomePage() {
                                 Alterações de região, nudez, mods, slots e senhas podem exigir reinício seguro do Conan para aplicar totalmente.
                             </div>
                         </div>
-                        <button onClick={() => salvarConfiguracoes()} style={{ width: '100%', padding: '10px', borderRadius: '4px', border: 'none', backgroundColor: '#e67e22', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>Salvar Configurações</button>
+                        </div>
+
+                        <button onClick={() => salvarConfiguracoes()} style={{ width: '100%', padding: '13px', borderRadius: '6px', border: 'none', backgroundColor: '#e67e22', color: '#fff', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px' }}>💾 Salvar Alterações do Servidor</button>
                         </div>
                     </div>
 
