@@ -80,26 +80,29 @@ export default function UpdatesManager() {
   const changedCount = mods.filter((mod) => mod.changed).length;
 
   return (
-    <div style={{ backgroundColor: '#1e1e1e', padding: '20px', borderRadius: '8px', border: '1px solid #333' }}>
-      <h2 style={{ marginTop: 0, color: '#f39c12', borderBottom: '1px solid #333', paddingBottom: '10px', fontSize: '20px' }}>
-        Atualizações do Conan e Mods
+    <div style={{ backgroundColor: '#1e1e1e', padding: '22px', borderRadius: '10px', border: '1px solid #333' }}>
+      {/* UPDATES_LAYOUT_V2 */}
+      <h2 style={{ marginTop: 0, color: '#f39c12', borderBottom: '1px solid #333', paddingBottom: '10px', fontSize: '22px' }}>
+        🔄 Atualizações do Conan e Mods
       </h2>
+      <p style={{ marginTop: '-2px', marginBottom: '18px', color: '#aaa', fontSize: '14px' }}>
+        Verifique atualizações dos mods no Steam Workshop e aplique updates com backup e reinício seguro.
+      </p>
 
       <div style={{
         backgroundColor: '#2a2412',
         border: '1px solid #8a5a00',
-        borderRadius: '6px',
+        borderRadius: '8px',
         color: '#facc15',
         padding: '14px',
         marginBottom: '18px'
       }}>
-        <b>Como funciona:</b><br />
-        Verificar Updates Agora consulta os mods no Steam Workshop e compara com a última base salva.
-        Atualizar Agora com Segurança envia aviso RCON, cria backup e reinicia o Conan.
-        Como <b>UPDATE_ON_START=true</b>, o jogo e os mods são atualizados quando o servidor sobe.
+        <b>⚠️ Como funciona:</b><br />
+        Primeiro verifique updates. Se houver alteração, use a atualização segura em horário adequado.
+        O processo envia aviso RCON, cria backup e reinicia o Conan. Como <b>UPDATE_ON_START=true</b>, o jogo e os mods são atualizados quando o servidor sobe.
       </div>
 
-      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '18px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px', marginBottom: '18px' }}>
         <button
           onClick={verificarAgora}
           disabled={actionLoading}
@@ -113,7 +116,7 @@ export default function UpdatesManager() {
             fontWeight: 'bold'
           }}
         >
-          🔍 {actionLoading ? 'Verificando...' : 'Verificar Updates Agora'}
+          🔍 {actionLoading ? 'Verificando...' : 'Verificar updates'}
         </button>
 
         <button
@@ -129,7 +132,7 @@ export default function UpdatesManager() {
             fontWeight: 'bold'
           }}
         >
-          🔄 Atualizar Agora com Segurança
+          🛡️ Atualizar com segurança
         </button>
 
         <button
@@ -145,11 +148,11 @@ export default function UpdatesManager() {
             fontWeight: 'bold'
           }}
         >
-          {loading ? 'Atualizando...' : 'Recarregar Status'}
+          {loading ? 'Atualizando...' : '↻ Recarregar status'}
         </button>
       </div>
 
-      <div style={{ backgroundColor: '#111', border: '1px solid #333', borderRadius: '6px', padding: '16px' }}>
+      <div style={{ backgroundColor: '#111', border: '1px solid #333', borderRadius: '8px', padding: '16px' }}>
         <h3 style={{ marginTop: 0, color: status?.updatesFound ? '#facc15' : '#22c55e' }}>
           {status
             ? status.updatesFound
@@ -185,13 +188,13 @@ export default function UpdatesManager() {
 
         <details open>
           <summary style={{ cursor: 'pointer', color: '#fff', fontWeight: 'bold', marginBottom: '10px' }}>
-            Mods checados ({mods.length})
+            🧩 Mods checados ({mods.length})
           </summary>
 
           <div style={{ display: 'grid', gap: '8px', marginTop: '10px' }}>
             {mods.length > 0 ? (
               mods.map((mod) => (
-                <div key=***REMOVIDO***
+                <div key={mod.modId} style={{
                   backgroundColor: '#1e1e1e',
                   border: '1px solid #333',
                   borderRadius: '5px',
