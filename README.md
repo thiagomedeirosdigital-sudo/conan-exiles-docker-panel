@@ -62,3 +62,29 @@ Nunca publique:
 - tokens ou chaves privadas
 
 Use os arquivos em examples/ como base.
+
+---
+
+## Versão atual do painel
+
+Esta versão inclui melhorias de segurança, organização visual e performance.
+
+### Recursos atuais
+
+- Painel protegido com Nginx + Basic Auth.
+- Dashboard reorganizado com ações rápidas.
+- Abas separadas: Dashboard, Mods e Atualizações, Backups, Automação, Diagnóstico e Configurações.
+- Configurações com senhas protegidas: a API não retorna senha Admin nem senha RCON.
+- Campos de senha em modo seguro: deixar vazio mantém a senha atual.
+- Backups seguros antes de restart, updates e ações críticas.
+- Gerenciamento de mods e ordem de carregamento.
+- Verificação de updates de mods.
+- Restart automático seguro com avisos RCON.
+- Diagnóstico de rede, portas locais e Steam Query.
+- Teste externo de portas via GitHub Actions.
+- Modo Privacidade para esconder dados sensíveis em prints.
+- Polling reduzido para melhorar performance.
+
+### Cuidados antes de publicar prints
+
+Antes de publicar imagens do painel, ative o Modo Privacidade para evitar exposição de IP público, nome real do servidor ou dados sensíveis.
