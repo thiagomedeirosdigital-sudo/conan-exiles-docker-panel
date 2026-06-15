@@ -181,12 +181,13 @@ export default function BackupManager() {
   const nomeBackup = (backup: BackupItem) => backup.filename || backup.name || '';
 
   return (
-    <div style={{ backgroundColor: '#1e1e1e', padding: '20px', borderRadius: '8px', color: '#fff' }}>
+    <div style={{ backgroundColor: '#1e1e1e', padding: '22px', borderRadius: '10px', color: '#fff', border: '1px solid #333' }}>
+      {/* BACKUP_LAYOUT_V2 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
         <div>
-          <h2 style={{ margin: 0 }}>💾 Backups Seguros</h2>
+          <h2 style={{ margin: 0, color: '#f39c12' }}>💾 Backups do Servidor</h2>
           <p style={{ marginTop: '6px', color: '#cbd5e1' }}>
-            O backup seguro para o Conan salva banco, WAL/SHM e configurações.
+            Gerencie apenas backups seguros do Conan. Backups antigos foram removidos da tela para evitar confusão.
           </p>
         </div>
 
@@ -231,20 +232,36 @@ export default function BackupManager() {
         </div>
       )}
 
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '18px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '12px', marginTop: '18px' }}>
+        <div style={{ background: '#151515', border: '1px solid #166534', borderRadius: '8px', padding: '14px' }}>
+          <strong style={{ color: '#86efac', display: 'block', fontSize: '15px' }}>🛡️ Backups seguros</strong>
+          <span style={{ color: '#fff', fontSize: '24px', fontWeight: 'bold' }}>{safeBackups.length}</span>
+          <p style={{ margin: '6px 0 0', color: '#aaa', fontSize: '12px' }}>Indicados para restauração.</p>
+        </div>
+
+
+        <div style={{ background: '#151515', border: '1px solid #7f1d1d', borderRadius: '8px', padding: '14px' }}>
+          <strong style={{ color: '#fecaca', display: 'block', fontSize: '15px' }}>⚠️ Atenção</strong>
+          <p style={{ margin: '6px 0 0', color: '#ddd', fontSize: '12px' }}>Restaurar backup altera o estado atual do servidor. Use com cuidado.</p>
+        </div>
+      </div>
+
+      <h3 style={{ marginTop: '24px', color: '#f39c12', borderBottom: '1px solid #333', paddingBottom: '8px' }}>🛡️ Backups seguros disponíveis</h3>
+
+      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '12px' }}>
         <thead>
           <tr style={{ borderBottom: '1px solid #444' }}>
             <th style={{ textAlign: 'left', padding: '10px' }}>Data / Hora</th>
-            <th style={{ textAlign: 'left', padding: '10px' }}>Backup seguro</th>
+            <th style={{ textAlign: 'left', padding: '10px' }}>Nome do backup</th>
             <th style={{ textAlign: 'left', padding: '10px' }}>Tamanho DB</th>
-            <th style={{ textAlign: 'right', padding: '10px' }}>Ação</th>
+            <th style={{ textAlign: 'right', padding: '10px' }}>Ações seguras</th>
           </tr>
         </thead>
         <tbody>
           {safeBackups.length === 0 ? (
             <tr>
               <td colSpan={4} style={{ padding: '18px', textAlign: 'center', color: '#aaa' }}>
-                Nenhum backup seguro encontrado.
+                Nenhum backup seguro encontrado. Clique em “Criar Backup Seguro” para gerar o primeiro.
               </td>
             </tr>
           ) : (
@@ -252,7 +269,7 @@ export default function BackupManager() {
               const name = nomeBackup(backup);
 
               return (
-                <tr key=***REMOVIDO***
+                <tr key={name} style={{ borderBottom: '1px solid #333' }}>
                   <td style={{ padding: '10px' }}>{backup.date || backup.modifiedAt || '-'}</td>
                   <td style={{ padding: '10px', fontFamily: 'monospace' }}>{name}</td>
                   <td style={{ padding: '10px' }}>
@@ -301,53 +318,7 @@ export default function BackupManager() {
         </tbody>
       </table>
 
-      {warning && (
-        <div style={{ marginTop: '20px', padding: '14px', backgroundColor: '#3b2f0b', border: '1px solid #8a5a00', borderRadius: '6px', color: '#facc15' }}>
-          ⚠️ {warning}
-        </div>
-      )}
 
-      <h3 style={{ marginTop: '24px', color: '#f39c12' }}>Backups antigos/inseguros</h3>
-      <p style={{ color: '#cbd5e1' }}>
-        Esses arquivos foram criados antes da correção e não devem ser usados para restauração automática.
-      </p>
-
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '12px' }}>
-        <thead>
-          <tr style={{ borderBottom: '1px solid #444' }}>
-            <th style={{ textAlign: 'left', padding: '10px' }}>Data / Hora</th>
-            <th style={{ textAlign: 'left', padding: '10px' }}>Backup antigo</th>
-            <th style={{ textAlign: 'left', padding: '10px' }}>Tamanho</th>
-            <th style={{ textAlign: 'right', padding: '10px' }}>Ação</th>
-          </tr>
-        </thead>
-        <tbody>
-          {legacyBackups.length === 0 ? (
-            <tr>
-              <td colSpan={4} style={{ padding: '18px', textAlign: 'center', color: '#aaa' }}>
-                Nenhum backup encontrado.
-              </td>
-            </tr>
-          ) : (
-            legacyBackups.map((backup) => {
-              const name = nomeBackup(backup);
-
-              return (
-                <tr key=***REMOVIDO***
-                  <td style={{ padding: '10px' }}>{backup.date || backup.modifiedAt || '-'}</td>
-                  <td style={{ padding: '10px', color: '#f39c12', fontFamily: 'monospace' }}>{name}</td>
-                  <td style={{ padding: '10px' }}>{backup.size || backup.sizeMB || '-'}</td>
-                  <td style={{ padding: '10px', textAlign: 'right' }}>
-                    <button disabled style={{ backgroundColor: '#555', color: '#ddd', border: 'none', padding: '7px 10px', borderRadius: '4px' }}>
-                      🔒 Restaurar bloqueado
-                    </button>
-                  </td>
-                </tr>
-              );
-            })
-          )}
-        </tbody>
-      </table>
     </div>
   );
 }
