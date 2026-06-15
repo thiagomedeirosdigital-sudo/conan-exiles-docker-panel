@@ -12,7 +12,6 @@ import ModsManager from './components/ModsManager';
 
 import { useEffect, useState } from 'react';
 import BackupManager from './components/BackupManager';
-import ExternalPortTestCard from "./components/ExternalPortTestCard";
 
 export default function HomePage() {
     const [activeTab, setActiveTab] = useState<'dash' | 'logs' | 'alerts' | 'backups' | 'updates' | 'mods' | 'maintenance'>('dash');
@@ -343,30 +342,13 @@ export default function HomePage() {
                     <p style={{ margin: '5px 0 0', color: '#888' }}>Gerenciamento Unificado • Linux Docker Engine</p>
                 </div>
 
-                {/* CONTROLES SEGUROS DO SERVIDOR */}
-                <div style={{ display: 'flex', gap: '10px', backgroundColor: '#1e1e1e', padding: '10px 15px', borderRadius: '6px', border: '1px solid #333', alignItems: 'center' }}>
-                    <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#aaa', marginRight: '5px' }}>CONTROLE SEGURO:</span>
-
-                    <button
-                        onClick={handleSafeRestart}
-                        disabled={powerLoading}
-                        style={{ padding: '6px 12px', borderRadius: '4px', border: 'none', background: powerLoading ? '#555' : '#16a34a', color: '#fff', fontWeight: 'bold', cursor: powerLoading ? 'wait' : 'pointer' }}
-                    >
-                        {powerLoading ? 'PROCESSANDO...' : '🛡️ REINÍCIO SEGURO'}
-                    </button>
-
-                    <button onClick={() => handlePower('start')} disabled={powerLoading} title="Bloqueado por segurança" style={{ padding: '6px 12px', borderRadius: '4px', border: 'none', background: '#555', color: '#bbb', fontWeight: 'bold', cursor: 'not-allowed' }}>LIGAR</button>
-                    <button onClick={() => handlePower('stop')} disabled={powerLoading} title="Bloqueado por segurança" style={{ padding: '6px 12px', borderRadius: '4px', border: 'none', background: '#555', color: '#bbb', fontWeight: 'bold', cursor: 'not-allowed' }}>DESLIGAR</button>
-                    <button onClick={() => handlePower('restart')} disabled={powerLoading} title="Bloqueado por segurança" style={{ padding: '6px 12px', borderRadius: '4px', border: 'none', background: '#555', color: '#bbb', fontWeight: 'bold', cursor: 'not-allowed' }}>REINICIAR</button>
-                </div>
-
                 {/* TELEMETRIA */}
                 <div style={{ display: 'flex', gap: '15px' }}>
                     <div style={{ background: '#1e1e1e', padding: '10px 15px', borderRadius: '6px', border: '1px solid #333', textAlign: 'center' }}>
                         <strong style={{ color: stats.status === 'Online' ? '#2ecc71' : '#e74c3c', display: 'block', fontSize: '14px' }}>{stats.status.toUpperCase()}</strong>
                     </div>
                     <div style={{ background: '#1e1e1e', padding: '10px 15px', borderRadius: '6px', border: '1px solid #333', width: '120px' }}>
-                        <span style={{ color: '#888', fontSize: '11px' }}>CPU XEON: {stats.cpu}%</span>
+                        <span style={{ color: '#888', fontSize: '11px' }}>CPU: {stats.cpu}%</span>
                         <div style={{ background: '#333', height: '4px', borderRadius: '2px', marginTop: '4px', overflow: 'hidden' }}>
                             <div style={{ background: '#f39c12', height: '100%', width: `${Math.min(parseFloat(stats.cpu), 100)}%` }} />
                         </div>
@@ -501,7 +483,7 @@ export default function HomePage() {
                 <button onClick={() => setActiveTab('logs')} style={{ padding: '10px 20px', borderRadius: '4px', border: 'none', backgroundColor: activeTab === 'logs' ? '#f39c12' : '#222', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>Logs</button>
                 <button onClick={() => setActiveTab('alerts')} style={{ padding: '10px 20px', borderRadius: '4px', border: 'none', backgroundColor: activeTab === 'alerts' ? '#f39c12' : '#222', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>Alertas</button>
                 <button onClick={() => setActiveTab('backups')} style={{ padding: '10px 20px', borderRadius: '4px', border: 'none', backgroundColor: activeTab === 'backups' ? '#f39c12' : '#222', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>Backups</button>
-                <button onClick={() => setActiveTab('updates')} style={{ padding: '10px 20px', borderRadius: '4px', border: 'none', backgroundColor: activeTab === 'updates' ? '#f39c12' : '#222', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>Updates</button>
+                <button onClick={() => setActiveTab('updates')} style={{ padding: '10px 20px', borderRadius: '4px', border: 'none', backgroundColor: activeTab === 'updates' ? '#f39c12' : '#222', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>Atualizações</button>
                 <button onClick={() => setActiveTab('mods')} style={{ padding: '10px 20px', borderRadius: '4px', border: 'none', backgroundColor: activeTab === 'mods' ? '#f39c12' : '#222', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>Mods</button>
                 <button onClick={() => setActiveTab('maintenance')} style={{ padding: '10px 20px', borderRadius: '4px', border: 'none', backgroundColor: activeTab === 'maintenance' ? '#f39c12' : '#222', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>Manutenção</button>
             </nav>
@@ -513,7 +495,7 @@ export default function HomePage() {
                         <DashboardSummary />
 
                         <NetworkStatus />
-        <ExternalPortTestCard />
+
 
 
                         <h2 style={{ marginTop: 0, color: '#f39c12', borderBottom: '1px solid #333', paddingBottom: '10px', fontSize: '18px' }}>Configurações do Servidor (.env + ServerSettings.ini)</h2>
@@ -575,9 +557,9 @@ export default function HomePage() {
 
                         
                 <div style={{ marginTop: '20px', backgroundColor: '#1e1e1e', padding: '20px', borderRadius: '8px', border: '1px solid #333' }}>
-                            <h2 style={{ marginTop: 0, color: '#f39c12', borderBottom: '1px solid #333', paddingBottom: '10px', fontSize: '18px' }}>Transmissão RCON Direta (Chat Live)</h2>
+                            <h2 style={{ marginTop: 0, color: '#f39c12', borderBottom: '1px solid #333', paddingBottom: '10px', fontSize: '18px' }}>Comunicados RCON</h2>
                             <form onSubmit={enviarRcon} style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                                <input type="text" placeholder="Digite a mensagem global..." value={textoRcon} onChange={(e) => setTextoRcon(e.target.value)} style={{ flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid #444', backgroundColor: '#2a2a2a', color: '#fff' }} />
+                                <input type="text" placeholder="Digite o comunicado para os jogadores..." value={textoRcon} onChange={(e) => setTextoRcon(e.target.value)} style={{ flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid #444', backgroundColor: '#2a2a2a', color: '#fff' }} />
                                 <button type="submit" style={{ padding: '0 25px', borderRadius: '4px', border: 'none', backgroundColor: '#3498db', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>Enviar</button>
                             </form>
                         </div>
