@@ -504,11 +504,6 @@ export default function HomePage() {
                                 <h2 style={{ marginTop: 0, color: '#f39c12', fontSize: '18px', borderBottom: '1px solid #333', paddingBottom: '10px' }}>📊 Status do Servidor</h2>
                                 <DashboardSummary />
                             </section>
-
-                            <section style={{ background: '#151515', border: '1px solid #333', borderRadius: '8px', padding: '14px' }}>
-                                <h2 style={{ marginTop: 0, color: '#f39c12', fontSize: '18px', borderBottom: '1px solid #333', paddingBottom: '10px' }}>🌐 Rede e Conectividade</h2>
-                                <NetworkStatus />
-                            </section>
                         </div>
 
 
@@ -605,6 +600,15 @@ export default function HomePage() {
             {activeTab === 'diagnostics' && (
                 <div style={{ display: 'grid', gap: '20px' }}>
                     <MaintenanceManager />
+
+                    {/* DIAGNOSTICO_REDE_V2 */}
+                    <section style={{ background: '#151515', border: '1px solid #333', borderRadius: '8px', padding: '20px' }}>
+                        <h2 style={{ marginTop: 0, color: '#f39c12', fontSize: '18px', borderBottom: '1px solid #333', paddingBottom: '10px' }}>🌐 Rede e Conectividade</h2>
+                        <p style={{ marginTop: '-4px', color: '#aaa', fontSize: '13px' }}>
+                            Diagnóstico local de portas, IP público e Steam Query.
+                        </p>
+                        <NetworkStatus />
+                    </section>
 
                     <div style={{ backgroundColor: '#151515', padding: '20px', borderRadius: '8px', border: '1px solid #333', fontFamily: 'monospace', minHeight: '450px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', borderBottom: '1px solid #222', paddingBottom: '10px' }}>
