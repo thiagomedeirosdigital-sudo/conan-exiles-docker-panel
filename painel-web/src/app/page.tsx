@@ -599,7 +599,14 @@ export default function HomePage() {
 
             {activeTab === 'diagnostics' && (
                 <div style={{ display: 'grid', gap: '20px' }}>
-                    <MaintenanceManager />
+                    {/* DIAGNOSTICO_LAYOUT_V2 */}
+                    <section style={{ background: '#151515', border: '1px solid #333', borderRadius: '8px', padding: '20px' }}>
+                        <h2 style={{ marginTop: 0, color: '#f39c12', fontSize: '18px', borderBottom: '1px solid #333', paddingBottom: '10px' }}>🧰 Manutenção</h2>
+                        <p style={{ marginTop: '-4px', color: '#aaa', fontSize: '13px' }}>
+                            Ferramentas de manutenção, limpeza e verificação do servidor.
+                        </p>
+                        <MaintenanceManager />
+                    </section>
 
                     {/* DIAGNOSTICO_REDE_V2 */}
                     <section style={{ background: '#151515', border: '1px solid #333', borderRadius: '8px', padding: '20px' }}>
@@ -611,8 +618,12 @@ export default function HomePage() {
                     </section>
 
                     <div style={{ backgroundColor: '#151515', padding: '20px', borderRadius: '8px', border: '1px solid #333', fontFamily: 'monospace', minHeight: '450px' }}>
+                        <h2 style={{ marginTop: 0, color: '#f39c12', fontSize: '18px', borderBottom: '1px solid #333', paddingBottom: '10px', fontFamily: 'sans-serif' }}>💻 Logs do Servidor</h2>
+                        <p style={{ marginTop: '-4px', color: '#aaa', fontSize: '13px', fontFamily: 'sans-serif' }}>
+                            Últimas mensagens do console para ajudar no diagnóstico.
+                        </p>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', borderBottom: '1px solid #222', paddingBottom: '10px' }}>
-                            <span style={{ color: '#2ecc71' }}>💻 stdout@conan-server-console</span>
+                            <span style={{ color: '#2ecc71' }}>💻 Logs recentes do servidor Conan</span>
                             <button onClick={() => { setServerLogs('Atualizando...'); fetch('/api/logs').then(res => res.json()).then(data => setServerLogs(data.logs)); }} style={{ background: '#333', border: 'none', color: '#fff', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>Atualizar</button>
                         </div>
                         <pre style={{ whiteSpace: 'pre-wrap', color: '#bbb', margin: 0, fontSize: '13px', maxHeight: '400px', overflowY: 'auto' }}>{serverLogs}</pre>
