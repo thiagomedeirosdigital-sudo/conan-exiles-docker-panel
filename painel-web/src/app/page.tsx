@@ -491,10 +491,17 @@ export default function HomePage() {
             {(activeTab === 'dash' || activeTab === 'settings') && (
                 <div style={{ display: 'grid', gridTemplateColumns: activeTab === 'settings' ? '1fr' : '1fr 1fr', gap: '25px', alignItems: 'start' }}>
                     <div style={{ backgroundColor: '#1e1e1e', padding: '20px', borderRadius: '8px', border: '1px solid #333' }}>
-                        <div style={{ display: activeTab === 'dash' ? 'block' : 'none' }}>
-                            <DashboardSummary />
+                        {/* DASHBOARD_LAYOUT_V2 */}
+                        <div style={{ display: activeTab === 'dash' ? 'grid' : 'none', gap: '16px' }}>
+                            <section style={{ background: '#151515', border: '1px solid #333', borderRadius: '8px', padding: '14px' }}>
+                                <h2 style={{ marginTop: 0, color: '#f39c12', fontSize: '18px', borderBottom: '1px solid #333', paddingBottom: '10px' }}>📊 Status do Servidor</h2>
+                                <DashboardSummary />
+                            </section>
 
-                            <NetworkStatus />
+                            <section style={{ background: '#151515', border: '1px solid #333', borderRadius: '8px', padding: '14px' }}>
+                                <h2 style={{ marginTop: 0, color: '#f39c12', fontSize: '18px', borderBottom: '1px solid #333', paddingBottom: '10px' }}>🌐 Rede e Conectividade</h2>
+                                <NetworkStatus />
+                            </section>
                         </div>
 
 
@@ -577,7 +584,8 @@ export default function HomePage() {
 
                         
                 <div style={{ marginTop: '20px', backgroundColor: '#1e1e1e', padding: '20px', borderRadius: '8px', border: '1px solid #333' }}>
-                            <h2 style={{ marginTop: 0, color: '#f39c12', borderBottom: '1px solid #333', paddingBottom: '10px', fontSize: '18px' }}>Comunicados RCON</h2>
+                            <h2 style={{ marginTop: 0, color: '#f39c12', borderBottom: '1px solid #333', paddingBottom: '10px', fontSize: '18px' }}>📣 Comunicados RCON</h2>
+                            <p style={{ marginTop: '-4px', color: '#aaa', fontSize: '13px' }}>Envie avisos rápidos para os jogadores conectados.</p>
                             <form onSubmit={enviarRcon} style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                                 <input type="text" placeholder="Digite o comunicado para os jogadores..." value={textoRcon} onChange={(e) => setTextoRcon(e.target.value)} style={{ flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid #444', backgroundColor: '#2a2a2a', color: '#fff' }} />
                                 <button type="submit" style={{ padding: '0 25px', borderRadius: '4px', border: 'none', backgroundColor: '#3498db', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>Enviar</button>
