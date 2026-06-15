@@ -77,13 +77,20 @@ export default function HomePage() {
             setLoading(false);
         }).catch(() => setLoading(false));
 
-        // Loop de monitoramento de Hardware (3s)
-        const interval = setInterval(() => {
+        // Loop de monitoramento de Hardware (15s)
+        // Pausa quando a aba do navegador está em segundo plano para reduzir carga no servidor.
+        const carregarStats = () => {
+            if (document.hidden) return;
+
             fetch('/api/stats')
                 .then(res => res.json())
                 .then(data => setStats(data))
                 .catch(() => setStats(prev => ({ ...prev, status: 'Offline' })));
-        }, 3000);
+        };
+
+        carregarStats();
+
+        const interval = setInterval(carregarStats, 15000);
 
     
     const carregarModsDetalhados = async () => {
