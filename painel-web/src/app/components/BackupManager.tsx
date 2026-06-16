@@ -46,6 +46,42 @@ export default function BackupManager() {
     setConfirmDialog(null);
   };
 
+
+  const verificarPlayersOnline = async () => {
+    try {
+      const res = await fetch('/api/players');
+      const data = await res.json();
+
+      const players = Number(data?.online?.players || 0);
+      const maxPlayers = Number(data?.online?.maxPlayers || 0);
+
+      return {
+        players,
+        maxPlayers,
+        temPlayers: players > 0
+      };
+    } catch {
+      return {
+        players: 0,
+        maxPlayers: 0,
+        temPlayers: false
+      };
+    }
+  };
+
+  const montarAvisoPlayers = (
+    playersInfo: { players: number; maxPlayers: number; temPlayers: boolean },
+    acao: string
+  ) => {
+    if (!playersInfo.temPlayers) {
+      return `Nenhum jogador online detectado agora. Mesmo assim, confirme apenas se tiver certeza.`;
+    }
+
+    return `⚠️ Existem ${playersInfo.players}/${playersInfo.maxPlayers || '?'} jogadores online agora. ${acao} pode afetar o servidor. Evite fazer isso com jogadores conectados.`;
+  };
+
+
+
   const carregarBackups = async () => {
     try {
       const res = await fetch('/api/backups');
@@ -62,11 +98,14 @@ export default function BackupManager() {
   }, []);
 
   const criarBackupSeguro = async () => {
+    // BACKUP_PLAYERS_ONLINE_WARNING_V1
+    const playersInfo = await verificarPlayersOnline();
+
     const ok = await pedirConfirmacao(
       'Criar Backup Seguro?',
-      'O Conan será parado temporariamente para copiar banco, WAL/SHM e configurações com segurança.',
-      'Criar backup seguro',
-      'aviso'
+      `${montarAvisoPlayers(playersInfo, 'Criar backup seguro')}\n\nO Conan será parado temporariamente para copiar banco, WAL/SHM e configurações com segurança.`,
+      playersInfo.temPlayers ? 'Confirmar mesmo com players online' : 'Criar backup seguro',
+      playersInfo.temPlayers ? 'perigo' : 'aviso'
     );
 
     if (!ok) return;
@@ -92,10 +131,12 @@ export default function BackupManager() {
   };
 
   const restaurarBackupSeguro = async (backupName: string) => {
+    const playersInfo = await verificarPlayersOnline();
+
     const ok = await pedirConfirmacao(
       'Restaurar Backup Seguro?',
-      `O backup ${backupName} será restaurado. O Conan será parado, o banco atual será salvo em um backup de emergência e depois o backup escolhido será aplicado.`,
-      'Restaurar backup',
+      `${montarAvisoPlayers(playersInfo, 'Restaurar backup seguro')}\n\nO backup ${backupName} será restaurado. O Conan será parado, o banco atual será salvo em um backup de emergência e depois o backup escolhido será aplicado.`,
+      playersInfo.temPlayers ? 'Confirmar mesmo com players online' : 'Restaurar backup',
       'perigo'
     );
 
@@ -134,10 +175,12 @@ export default function BackupManager() {
   };
 
   const excluirBackupSeguro = async (backupName: string) => {
+    const playersInfo = await verificarPlayersOnline();
+
     const ok = await pedirConfirmacao(
       'Excluir Backup Seguro?',
-      `O backup ${backupName} será excluído permanentemente. Essa ação apaga a pasta inteira desse backup e não pode ser desfeita.`,
-      'Excluir backup',
+      `${montarAvisoPlayers(playersInfo, 'Excluir backup seguro')}\n\nO backup ${backupName} será excluído permanentemente. Essa ação apaga a pasta inteira desse backup e não pode ser desfeita.`,
+      playersInfo.temPlayers ? 'Confirmar mesmo com players online' : 'Excluir backup',
       'perigo'
     );
 
