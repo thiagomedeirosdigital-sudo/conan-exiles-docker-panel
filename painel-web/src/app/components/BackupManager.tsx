@@ -181,7 +181,7 @@ export default function BackupManager() {
         <div>
           <h2 style={{ margin: 0, color: '#f39c12' }}>💾 Backups do Servidor</h2>
           <p style={{ marginTop: '6px', color: '#cbd5e1' }}>
-            Gerencie apenas backups seguros do Conan. Tudo relacionado a backup antigo/legacy foi removido da tela.
+            Gerencie apenas backups seguros do Conan. Backups antigos foram removidos da tela para evitar confusão.
           </p>
         </div>
 
