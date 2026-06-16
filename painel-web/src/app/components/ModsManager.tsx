@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 type ModInfo = {
   modId: string;
@@ -16,7 +16,35 @@ export default function ModsManager() {
   const [mods, setMods] = useState<ModInfo[]>([]);
   const [novoMod, setNovoMod] = useState('');
   const [loading, setLoading] = useState(false);
-  const [feedback, setFeedback] = useState<{ tipo: 'sucesso' | 'erro'; texto: string } | null>(null);
+  const [feedback, setFeedback] = useState<{ tipo: 'sucesso' | 'erro' | 'aviso'; texto: string } | null>(null);
+
+  const confirmResolver = useRef<((value: boolean) => void) | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    titulo: string;
+    mensagem: string;
+    confirmarTexto: string;
+    tipo?: 'perigo' | 'aviso';
+  } | null>(null);
+
+  const pedirConfirmacao = (
+    titulo: string,
+    mensagem: string,
+    confirmarTexto: string,
+    tipo: 'perigo' | 'aviso' = 'aviso'
+  ) => {
+    return new Promise<boolean>((resolve) => {
+      confirmResolver.current = resolve;
+      setConfirmDialog({ titulo, mensagem, confirmarTexto, tipo });
+    });
+  };
+
+  const fecharConfirmacao = (confirmado: boolean) => {
+    if (confirmResolver.current) {
+      confirmResolver.current(confirmado);
+      confirmResolver.current = null;
+    }
+    setConfirmDialog(null);
+  };
 
   const carregar = async () => {
     setLoading(true);
@@ -121,7 +149,14 @@ export default function ModsManager() {
   };
 
   const remover = async (id: string) => {
-    if (!confirm(`Remover o mod ${id} da lista?\n\nSerá salvo no .env e no modlist.txt. Use Reinício Seguro para aplicar.`)) return;
+    const confirmado = await pedirConfirmacao(
+      'Remover mod da lista?',
+      `O mod ${id} será removido da lista e a nova ordem será salva no .env e no modlist.txt. Use Reinício Seguro para aplicar no servidor.`,
+      'Remover mod',
+      'perigo'
+    );
+
+    if (!confirmado) return;
 
     const novaLista = mods.filter(m => m.modId !== id).map((m, i) => ({ ...m, order: i + 1 }));
     setMods(novaLista);
@@ -143,8 +178,9 @@ export default function ModsManager() {
           padding: '12px',
           borderRadius: '6px',
           marginBottom: '15px',
-          backgroundColor: feedback.tipo === 'sucesso' ? '#14532d' : '#5a1a1a',
-          color: '#fff'
+          backgroundColor: feedback.tipo === 'sucesso' ? '#14532d' : feedback.tipo === 'aviso' ? '#2a2412' : '#5a1a1a',
+          border: feedback.tipo === 'aviso' ? '1px solid #8a5a00' : '1px solid transparent',
+          color: feedback.tipo === 'aviso' ? '#facc15' : '#fff'
         }}>
           {feedback.texto}
         </div>
@@ -177,13 +213,16 @@ export default function ModsManager() {
           <button
             type="button"
             onClick={async () => {
-              const ok = confirm(
-                'Aplicar mods com segurança agora?\n\n' +
-                'Isso vai salvar a ordem atual, criar backup seguro, parar o Conan, recriar o container, baixar mods novos e subir o servidor novamente.\n\n' +
-                'Use somente em horário seguro.'
+              const ok = await pedirConfirmacao(
+                'Aplicar mods com segurança?',
+                'Isso vai salvar a ordem atual, criar backup seguro, parar o Conan, recriar o container, baixar mods novos e subir o servidor novamente. Use somente em horário seguro.',
+                'Aplicar mods com segurança',
+                'perigo'
               );
 
               if (!ok) return;
+
+              setFeedback({ tipo: 'aviso', texto: 'Aplicação segura de mods iniciada. Aguarde o processo...' });
 
               try {
                 await salvar();
@@ -197,14 +236,14 @@ export default function ModsManager() {
                 const data = await res.json();
 
                 if (!data.success) {
-                  alert(data.error || 'Falha ao aplicar mods.');
+                  setFeedback({ tipo: 'erro', texto: data.error || 'Falha ao aplicar mods.' });
                   return;
                 }
 
-                alert('Mods aplicados com segurança. Aguarde o servidor terminar de subir e confira os logs.');
+                setFeedback({ tipo: 'sucesso', texto: 'Mods aplicados com segurança. Aguarde o servidor terminar de subir e confira os logs.' });
                 await carregar();
               } catch {
-                alert('Erro ao aplicar mods com segurança.');
+                setFeedback({ tipo: 'erro', texto: 'Erro ao aplicar mods com segurança.' });
               }
             }}
             style={{
@@ -264,6 +303,92 @@ export default function ModsManager() {
         )}
         </div>
       </div>
+
+      {confirmDialog && (
+        <div
+          /* MODS_CONFIRM_MODAL_V1 */
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.72)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+        >
+          <div style={{
+            width: '100%',
+            maxWidth: '470px',
+            backgroundColor: '#1e1e1e',
+            border: confirmDialog.tipo === 'perigo' ? '1px solid #dc2626' : '1px solid #f39c12',
+            borderRadius: '12px',
+            padding: '22px',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.45)'
+          }}>
+            <h2 style={{
+              marginTop: 0,
+              marginBottom: '10px',
+              color: confirmDialog.tipo === 'perigo' ? '#f87171' : '#f39c12',
+              fontSize: '20px'
+            }}>
+              ⚠️ {confirmDialog.titulo}
+            </h2>
+
+            <p style={{ color: '#ddd', fontSize: '14px', lineHeight: 1.5, marginBottom: '18px' }}>
+              {confirmDialog.mensagem}
+            </p>
+
+            <div style={{
+              backgroundColor: '#2a2412',
+              border: '1px solid #8a5a00',
+              color: '#facc15',
+              borderRadius: '8px',
+              padding: '10px',
+              fontSize: '13px',
+              marginBottom: '18px'
+            }}>
+              Essa ação altera a lista de mods. Confirme apenas se tiver certeza.
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => fecharConfirmacao(false)}
+                style={{
+                  padding: '10px 16px',
+                  borderRadius: '6px',
+                  border: '1px solid #444',
+                  backgroundColor: '#2a2a2a',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={() => fecharConfirmacao(true)}
+                style={{
+                  padding: '10px 16px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  backgroundColor: confirmDialog.tipo === 'perigo' ? '#dc2626' : '#f39c12',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                {confirmDialog.confirmarTexto}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
