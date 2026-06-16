@@ -62,6 +62,39 @@ export default function HomePage() {
         setConfirmDialog(null);
     };
 
+
+    const verificarPlayersOnline = async () => {
+        try {
+            const res = await fetch('/api/players');
+            const data = await res.json();
+
+            const players = Number(data?.online?.players || 0);
+            const maxPlayers = Number(data?.online?.maxPlayers || 0);
+
+            return {
+                players,
+                maxPlayers,
+                temPlayers: players > 0
+            };
+        } catch {
+            return {
+                players: 0,
+                maxPlayers: 0,
+                temPlayers: false
+            };
+        }
+    };
+
+    const montarAvisoPlayers = (playersInfo: { players: number; maxPlayers: number; temPlayers: boolean }) => {
+        if (!playersInfo.temPlayers) {
+            return 'Nenhum jogador online detectado agora. Mesmo assim, confirme apenas se tiver certeza.';
+        }
+
+        return `⚠️ Existem ${playersInfo.players}/${playersInfo.maxPlayers || '?'} jogadores online agora. Evite reiniciar ou atualizar neste momento, a menos que seja realmente necessário.`;
+    };
+
+
+
     // Estado de Alertas Customizados
     const [restartAtivo, setRestartAtivo] = useState(false);
     const [horaRestart, setHoraRestart] = useState('03:00');
@@ -222,10 +255,13 @@ export default function HomePage() {
     };
 
     const handleSafeRestart = async () => {
+        // PLAYERS_ONLINE_WARNING_V1
+        const playersInfo = await verificarPlayersOnline();
+
         const confirmado = await pedirConfirmacao(
             'Executar Reinício Seguro?',
-            'O painel irá parar o Conan, criar backup pré-reinício e iniciar novamente. Use apenas quando não houver jogadores online.',
-            'Executar reinício seguro',
+            `${montarAvisoPlayers(playersInfo)}\n\nO painel irá parar o Conan, criar backup pré-reinício e iniciar novamente.`,
+            playersInfo.temPlayers ? 'Confirmar mesmo com players online' : 'Executar reinício seguro',
             'perigo'
         );
 
@@ -305,10 +341,12 @@ export default function HomePage() {
     };
 
     const atualizarAgoraComSeguranca = async () => {
+        const playersInfo = await verificarPlayersOnline();
+
         const confirmado = await pedirConfirmacao(
             'Executar Atualização Segura?',
-            'O painel enviará aviso RCON, aguardará 2 minutos, criará backup e reiniciará o Conan para atualizar jogo/mods.',
-            'Executar atualização segura',
+            `${montarAvisoPlayers(playersInfo)}\n\nO painel enviará aviso RCON, aguardará 2 minutos, criará backup e reiniciará o Conan para atualizar jogo/mods.`,
+            playersInfo.temPlayers ? 'Confirmar mesmo com players online' : 'Executar atualização segura',
             'perigo'
         );
 
