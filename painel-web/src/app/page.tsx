@@ -106,6 +106,43 @@ export default function HomePage() {
     // Estado de Logs e Live Monitor
     const [serverLogs, setServerLogs] = useState('Carregando terminal...');
     const [stats, setStats] = useState({ status: 'Carregando...', cpu: '0.0', ram: { percent: '0', used: '0', total: '0' } });
+    const [playersStatus, setPlayersStatus] = useState({
+        players: 0,
+        maxPlayers: 0,
+        checkedAt: '',
+        loading: true
+    });
+
+
+    useEffect(() => {
+        const carregarPlayersStatus = () => {
+            fetch('/api/players')
+                .then(res => res.json())
+                .then(data => {
+                    setPlayersStatus({
+                        players: Number(data?.online?.players || 0),
+                        maxPlayers: Number(data?.online?.maxPlayers || 0),
+                        checkedAt: data?.checkedAt || '',
+                        loading: false
+                    });
+                })
+                .catch(() => {
+                    setPlayersStatus(prev => ({
+                        ...prev,
+                        loading: false
+                    }));
+                });
+        };
+
+        carregarPlayersStatus();
+
+        const interval = setInterval(() => {
+            if (document.hidden) return;
+            carregarPlayersStatus();
+        }, 30000);
+
+        return () => clearInterval(interval);
+    }, []);
 
     useEffect(() => {
         // Carga paralela inicial
@@ -452,6 +489,49 @@ export default function HomePage() {
                 </div>
             )}
 
+
+
+            {/* MAINTENANCE_STATUS_CARD_V1 */}
+            <div style={{
+                marginBottom: '20px',
+                padding: '16px',
+                borderRadius: '10px',
+                border: playersStatus.players > 0 ? '1px solid #991b1b' : '1px solid #166534',
+                backgroundColor: playersStatus.players > 0 ? '#351212' : '#12351f',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '12px',
+                flexWrap: 'wrap'
+            }}>
+                <div>
+                    <strong style={{
+                        display: 'block',
+                        color: playersStatus.players > 0 ? '#fecaca' : '#86efac',
+                        fontSize: '16px'
+                    }}>
+                        {playersStatus.loading
+                            ? '⏳ Verificando jogadores online...'
+                            : playersStatus.players > 0
+                                ? '🔴 Evite manutenção agora'
+                                : '🟢 Seguro para manutenção'}
+                    </strong>
+
+                    <span style={{ color: '#ddd', fontSize: '13px' }}>
+                        Jogadores online agora: {playersStatus.players}/{playersStatus.maxPlayers || '?'}
+                    </span>
+                </div>
+
+                <div style={{
+                    color: playersStatus.players > 0 ? '#fecaca' : '#bbf7d0',
+                    fontSize: '13px',
+                    textAlign: 'right'
+                }}>
+                    {playersStatus.players > 0
+                        ? 'Há jogadores conectados. Evite restart, update, mods e restauração.'
+                        : 'Nenhum jogador online detectado. Melhor momento para ações críticas.'}
+                </div>
+            </div>
 
             {/* ACOES RAPIDAS DO DASHBOARD */}
             <section style={{
