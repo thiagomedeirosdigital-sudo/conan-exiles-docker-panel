@@ -10,7 +10,7 @@ import NetworkStatus from './components/NetworkStatus';
 
 import ModsManager from './components/ModsManager';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import BackupManager from './components/BackupManager';
 
 export default function HomePage() {
@@ -37,6 +37,34 @@ export default function HomePage() {
     const [novoModId, setNovoModId] = useState('');
     const [textoRcon, setTextoRcon] = useState('');
     const [privacyMode, setPrivacyMode] = useState(false);
+
+    const confirmResolver = useRef<((value: boolean) => void) | null>(null);
+    const [confirmDialog, setConfirmDialog] = useState<{
+        titulo: string;
+        mensagem: string;
+        confirmarTexto: string;
+        tipo?: 'perigo' | 'aviso';
+    } | null>(null);
+
+    const pedirConfirmacao = (
+        titulo: string,
+        mensagem: string,
+        confirmarTexto = 'Confirmar',
+        tipo: 'perigo' | 'aviso' = 'aviso'
+    ) => {
+        return new Promise<boolean>((resolve) => {
+            confirmResolver.current = resolve;
+            setConfirmDialog({ titulo, mensagem, confirmarTexto, tipo });
+        });
+    };
+
+    const fecharConfirmacao = (confirmado: boolean) => {
+        if (confirmResolver.current) {
+            confirmResolver.current(confirmado);
+            confirmResolver.current = null;
+        }
+        setConfirmDialog(null);
+    };
 
     // Estado de Alertas Customizados
     const [restartAtivo, setRestartAtivo] = useState(false);
@@ -198,7 +226,14 @@ export default function HomePage() {
     };
 
     const handleSafeRestart = async () => {
-        if (!confirm('Deseja executar o REINÍCIO SEGURO?\n\nO painel irá parar o Conan, criar backup pré-reinício e iniciar novamente.')) return;
+        const confirmado = await pedirConfirmacao(
+            'Executar Reinício Seguro?',
+            'O painel irá parar o Conan, criar backup pré-reinício e iniciar novamente. Use apenas quando não houver jogadores online.',
+            'Executar reinício seguro',
+            'perigo'
+        );
+
+        if (!confirmado) return;
 
         setPowerLoading(true);
         setFeedback({ tipo: 'sucesso', texto: 'Executando reinício seguro. Aguarde...' });
@@ -274,7 +309,14 @@ export default function HomePage() {
     };
 
     const atualizarAgoraComSeguranca = async () => {
-        if (!confirm('Deseja executar ATUALIZAÇÃO SEGURA agora?\n\nO painel enviará aviso RCON, aguardará 2 minutos, criará backup e reiniciará o Conan para atualizar jogo/mods.')) return;
+        const confirmado = await pedirConfirmacao(
+            'Executar Atualização Segura?',
+            'O painel enviará aviso RCON, aguardará 2 minutos, criará backup e reiniciará o Conan para atualizar jogo/mods.',
+            'Executar atualização segura',
+            'perigo'
+        );
+
+        if (!confirmado) return;
 
         setUpdateLoading(true);
         setFeedback({ tipo: 'sucesso', texto: 'Atualização segura iniciada. Aguarde o processo finalizar...' });
@@ -695,6 +737,97 @@ export default function HomePage() {
 
             {activeTab === 'backups' && (
                 <BackupManager />
+            )}
+
+
+            {confirmDialog && (
+                <div
+                    /* CONFIRM_MODAL_V1 */
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        backgroundColor: 'rgba(0,0,0,0.72)',
+                        zIndex: 9999,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '20px'
+                    }}
+                >
+                    <div style={{
+                        width: '100%',
+                        maxWidth: '460px',
+                        backgroundColor: '#1e1e1e',
+                        border: confirmDialog.tipo === 'perigo' ? '1px solid #dc2626' : '1px solid #f39c12',
+                        borderRadius: '12px',
+                        padding: '22px',
+                        boxShadow: '0 20px 60px rgba(0,0,0,0.45)'
+                    }}>
+                        <h2 style={{
+                            marginTop: 0,
+                            marginBottom: '10px',
+                            color: confirmDialog.tipo === 'perigo' ? '#f87171' : '#f39c12',
+                            fontSize: '20px'
+                        }}>
+                            ⚠️ {confirmDialog.titulo}
+                        </h2>
+
+                        <p style={{
+                            color: '#ddd',
+                            fontSize: '14px',
+                            lineHeight: 1.5,
+                            marginBottom: '18px'
+                        }}>
+                            {confirmDialog.mensagem}
+                        </p>
+
+                        <div style={{
+                            backgroundColor: '#2a2412',
+                            border: '1px solid #8a5a00',
+                            color: '#facc15',
+                            borderRadius: '8px',
+                            padding: '10px',
+                            fontSize: '13px',
+                            marginBottom: '18px'
+                        }}>
+                            Essa é uma ação crítica. Confirme apenas se você tiver certeza.
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', flexWrap: 'wrap' }}>
+                            <button
+                                type="button"
+                                onClick={() => fecharConfirmacao(false)}
+                                style={{
+                                    padding: '10px 16px',
+                                    borderRadius: '6px',
+                                    border: '1px solid #444',
+                                    backgroundColor: '#2a2a2a',
+                                    color: '#fff',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold'
+                                }}
+                            >
+                                Cancelar
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => fecharConfirmacao(true)}
+                                style={{
+                                    padding: '10px 16px',
+                                    borderRadius: '6px',
+                                    border: 'none',
+                                    backgroundColor: confirmDialog.tipo === 'perigo' ? '#dc2626' : '#f39c12',
+                                    color: '#fff',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold'
+                                }}
+                            >
+                                {confirmDialog.confirmarTexto}
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
 
         </div>
