@@ -175,7 +175,7 @@ export async function GET() {
       { port: 7777, protocol: 'UDP', purpose: 'Jogo Conan' },
       { port: 7778, protocol: 'UDP', purpose: 'Jogo Conan' },
       { port: 27015, protocol: 'UDP', purpose: 'Steam Query / listagem' },
-      { port: 25575, protocol: 'TCP', purpose: 'RCON / administração' }
+      { port: 25575, protocol: 'TCP', purpose: 'RCON / administração protegido em localhost' }
     ],
     manualExternalTests: [
       'Teste pelo celular no 4G/5G, fora do Wi-Fi, tentando localizar/conectar no servidor.',

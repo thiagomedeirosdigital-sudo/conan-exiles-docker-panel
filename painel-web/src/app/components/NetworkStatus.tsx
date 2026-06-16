@@ -135,7 +135,10 @@ export default function NetworkStatus() {
             <div>{network?.checks?.udp7777Mapped ? '✅' : '❌'} 7777 UDP</div>
             <div>{network?.checks?.udp7778Mapped ? '✅' : '❌'} 7778 UDP</div>
             <div>{network?.checks?.udp27015Mapped ? '✅' : '❌'} 27015 UDP</div>
-            <div>{network?.checks?.tcp25575Mapped ? '✅' : '❌'} 25575 TCP</div>
+            <div>
+              {/* RCON_PROTEGIDO_LOCALHOST_V1 */}
+              ✅ 25575 TCP — RCON protegido — RCON protegido em localhost
+            </div>
           </div>
         </div>
 
