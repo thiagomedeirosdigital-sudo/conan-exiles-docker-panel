@@ -129,10 +129,14 @@ export default function ModsManager() {
   };
 
   return (
-    <div style={{ backgroundColor: '#1e1e1e', padding: '25px', borderRadius: '8px', border: '1px solid #333', maxWidth: '1200px' }}>
-      <h2 style={{ marginTop: 0, color: '#f39c12', borderBottom: '1px solid #333', paddingBottom: '10px', fontSize: '18px' }}>
-        Modlist e Ordem de Carregamento
+    <div style={{ backgroundColor: '#1e1e1e', padding: '25px', borderRadius: '10px', border: '1px solid #333', maxWidth: '1200px' }}>
+      {/* MODS_LAYOUT_V2 */}
+      <h2 style={{ marginTop: 0, color: '#f39c12', borderBottom: '1px solid #333', paddingBottom: '10px', fontSize: '22px' }}>
+        🧩 Mods e Ordem de Carregamento
       </h2>
+      <p style={{ marginTop: '-2px', marginBottom: '18px', color: '#aaa', fontSize: '14px' }}>
+        Gerencie a lista de mods, ajuste a ordem real de carregamento e aplique alterações com segurança.
+      </p>
 
       {feedback && (
         <div style={{
@@ -146,11 +150,14 @@ export default function ModsManager() {
         </div>
       )}
 
-      <div style={{ padding: '12px', borderRadius: '6px', marginBottom: '15px', background: '#2a2412', border: '1px solid #8a5a00', color: '#f1c40f' }}>
-        A ordem abaixo é a ordem real de carregamento do Conan. Altere a ordem abaixo e clique em Aplicar Mods com Segurança para salvar, baixar/aplicar e reiniciar o Conan corretamente.
+      <div style={{ padding: '14px', borderRadius: '8px', marginBottom: '16px', background: '#2a2412', border: '1px solid #8a5a00', color: '#f1c40f' }}>
+        <b>⚠️ Importante:</b><br />
+        A ordem abaixo é a ordem real de carregamento do Conan. Após alterar, use “Salvar e Aplicar Mods com Segurança” para criar backup, aplicar mods e reiniciar corretamente.
       </div>
 
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
+      <div style={{ background: '#151515', border: '1px solid #333', borderRadius: '8px', padding: '14px', marginBottom: '18px' }}>
+        <h3 style={{ marginTop: 0, color: '#f39c12', fontSize: '16px' }}>➕ Adicionar ou atualizar lista</h3>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
         <input
           type="text"
           placeholder="ID do Mod Steam"
@@ -160,7 +167,7 @@ export default function ModsManager() {
         />
 
         <button type="button" onClick={adicionar} disabled={loading} style={{ padding: '9px 14px', borderRadius: '4px', border: 'none', backgroundColor: '#2ecc71', color: '#fff', fontWeight: 'bold', cursor: loading ? 'wait' : 'pointer' }}>
-          Inserir
+          ➕ Inserir mod
         </button>
 
         <button type="button" onClick={carregar} disabled={loading} style={{ padding: '9px 14px', borderRadius: '4px', border: 'none', backgroundColor: '#3498db', color: '#fff', fontWeight: 'bold', cursor: loading ? 'wait' : 'pointer' }}>
@@ -212,6 +219,7 @@ export default function ModsManager() {
           >
             🚀 Salvar e Aplicar Mods com Segurança
           </button>
+        </div>
       </div>
 
       {loading && (
@@ -220,7 +228,13 @@ export default function ModsManager() {
         </div>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div style={{ background: '#151515', border: '1px solid #333', borderRadius: '8px', padding: '14px' }}>
+        <h3 style={{ marginTop: 0, color: '#f39c12', fontSize: '16px' }}>📋 Ordem de carregamento dos mods</h3>
+        <p style={{ color: '#aaa', fontSize: '13px', marginTop: '-4px' }}>
+          Use as setas para reorganizar. O primeiro item carrega primeiro.
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {mods.map((mod, index) => (
           <div key={mod.modId} style={{ display: 'grid', gridTemplateColumns: '55px 1fr 120px 100px', gap: '12px', alignItems: 'center', padding: '12px', backgroundColor: '#252525', border: '1px solid #333', borderRadius: '6px' }}>
             <div style={{ color: '#f39c12', fontWeight: 'bold' }}>#{index + 1}</div>
@@ -244,10 +258,11 @@ export default function ModsManager() {
         ))}
 
         {mods.length === 0 && !loading && (
-          <div style={{ padding: '14px', background: '#151515', border: '1px solid #333', borderRadius: '6px', color: '#aaa' }}>
+          <div style={{ padding: '14px', background: '#1e1e1e', border: '1px solid #333', borderRadius: '6px', color: '#aaa' }}>
             Nenhum mod carregado.
           </div>
         )}
+        </div>
       </div>
     </div>
   );
