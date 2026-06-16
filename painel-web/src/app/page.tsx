@@ -734,6 +734,14 @@ export default function HomePage() {
             {activeTab === 'backups' && (
                 <BackupManager />
             )}
+            {/* PAGE_SHARED_CONFIRM_MODAL_V1 */}
+            <ConfirmModal
+                dialog={confirmDialog}
+                onCancel={() => fecharConfirmacao(false)}
+                onConfirm={() => fecharConfirmacao(true)}
+                aviso="Essa é uma ação crítica. Confirme apenas se tiver certeza."
+            />
+
         </div>
     );
 }
