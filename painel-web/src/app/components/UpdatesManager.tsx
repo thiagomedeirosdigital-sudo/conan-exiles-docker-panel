@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 type ModUpdate = {
   modId: string;
@@ -14,6 +14,29 @@ export default function UpdatesManager() {
   const [status, setStatus] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [feedback, setFeedback] = useState<{ tipo: 'sucesso' | 'erro' | 'aviso'; texto: string } | null>(null);
+
+  const confirmResolver = useRef<((value: boolean) => void) | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    titulo: string;
+    mensagem: string;
+    confirmarTexto: string;
+  } | null>(null);
+
+  const pedirConfirmacao = (titulo: string, mensagem: string, confirmarTexto: string) => {
+    return new Promise<boolean>((resolve) => {
+      confirmResolver.current = resolve;
+      setConfirmDialog({ titulo, mensagem, confirmarTexto });
+    });
+  };
+
+  const fecharConfirmacao = (confirmado: boolean) => {
+    if (confirmResolver.current) {
+      confirmResolver.current(confirmado);
+      confirmResolver.current = null;
+    }
+    setConfirmDialog(null);
+  };
 
   const carregarStatus = async () => {
     setLoading(true);
@@ -35,29 +58,34 @@ export default function UpdatesManager() {
 
   const verificarAgora = async () => {
     setActionLoading(true);
+    setFeedback(null);
 
     try {
       const res = await fetch('/api/updates', { method: 'POST' });
       const data = await res.json();
       setStatus(data);
-      alert(data.updatesFound ? 'Update encontrado.' : 'Nenhum update encontrado.');
+      setFeedback({
+        tipo: data.updatesFound ? 'aviso' : 'sucesso',
+        texto: data.updatesFound ? 'Update encontrado. Confira os mods listados abaixo.' : 'Nenhum update encontrado no momento.'
+      });
     } catch {
-      alert('Erro ao verificar updates.');
+      setFeedback({ tipo: 'erro', texto: 'Erro ao verificar updates.' });
     } finally {
       setActionLoading(false);
     }
   };
 
   const atualizarComSeguranca = async () => {
-    const ok = confirm(
-      'Executar atualização segura agora?\n\n' +
-      'O painel enviará aviso RCON, criará backup seguro, reiniciará o Conan e aplicará updates no start.\n\n' +
-      'Use somente em horário seguro.'
+    const ok = await pedirConfirmacao(
+      'Executar Atualização Segura?',
+      'O painel enviará aviso RCON, criará backup seguro, reiniciará o Conan e aplicará updates no start. Use somente em horário seguro.',
+      'Executar atualização segura'
     );
 
     if (!ok) return;
 
     setActionLoading(true);
+    setFeedback({ tipo: 'aviso', texto: 'Atualização segura solicitada. Aguarde o processo iniciar...' });
 
     try {
       const res = await fetch('/api/updates', {
@@ -68,9 +96,12 @@ export default function UpdatesManager() {
 
       const data = await res.json();
       setStatus(data);
-      alert(data.message || 'Processo de atualização solicitado.');
+      setFeedback({
+        tipo: data.success === false ? 'erro' : 'sucesso',
+        texto: data.message || 'Processo de atualização solicitado.'
+      });
     } catch {
-      alert('Erro ao solicitar atualização segura.');
+      setFeedback({ tipo: 'erro', texto: 'Erro ao solicitar atualização segura.' });
     } finally {
       setActionLoading(false);
     }
@@ -101,6 +132,20 @@ export default function UpdatesManager() {
         Primeiro verifique updates. Se houver alteração, use a atualização segura em horário adequado.
         O processo envia aviso RCON, cria backup e reinicia o Conan. Como <b>UPDATE_ON_START=true</b>, o jogo e os mods são atualizados quando o servidor sobe.
       </div>
+
+      {feedback && (
+        <div style={{
+          padding: '12px',
+          borderRadius: '8px',
+          marginBottom: '16px',
+          border: feedback.tipo === 'erro' ? '1px solid #991b1b' : feedback.tipo === 'aviso' ? '1px solid #8a5a00' : '1px solid #16a34a',
+          backgroundColor: feedback.tipo === 'erro' ? '#351212' : feedback.tipo === 'aviso' ? '#2a2412' : '#12351f',
+          color: feedback.tipo === 'erro' ? '#fecaca' : feedback.tipo === 'aviso' ? '#facc15' : '#bbf7d0',
+          fontWeight: 'bold'
+        }}>
+          {feedback.texto}
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px', marginBottom: '18px' }}>
         <button
@@ -228,6 +273,87 @@ export default function UpdatesManager() {
           </div>
         </details>
       </div>
+
+      {confirmDialog && (
+        <div
+          /* UPDATES_CONFIRM_MODAL_V1 */
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.72)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+        >
+          <div style={{
+            width: '100%',
+            maxWidth: '460px',
+            backgroundColor: '#1e1e1e',
+            border: '1px solid #dc2626',
+            borderRadius: '12px',
+            padding: '22px',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.45)'
+          }}>
+            <h2 style={{ marginTop: 0, marginBottom: '10px', color: '#f87171', fontSize: '20px' }}>
+              ⚠️ {confirmDialog.titulo}
+            </h2>
+
+            <p style={{ color: '#ddd', fontSize: '14px', lineHeight: 1.5, marginBottom: '18px' }}>
+              {confirmDialog.mensagem}
+            </p>
+
+            <div style={{
+              backgroundColor: '#2a2412',
+              border: '1px solid #8a5a00',
+              color: '#facc15',
+              borderRadius: '8px',
+              padding: '10px',
+              fontSize: '13px',
+              marginBottom: '18px'
+            }}>
+              Essa ação pode reiniciar o servidor. Confirme apenas em horário seguro.
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => fecharConfirmacao(false)}
+                style={{
+                  padding: '10px 16px',
+                  borderRadius: '6px',
+                  border: '1px solid #444',
+                  backgroundColor: '#2a2a2a',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={() => fecharConfirmacao(true)}
+                style={{
+                  padding: '10px 16px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  backgroundColor: '#dc2626',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                {confirmDialog.confirmarTexto}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
