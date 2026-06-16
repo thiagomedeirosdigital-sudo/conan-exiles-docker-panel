@@ -88,3 +88,32 @@ Esta versão inclui melhorias de segurança, organização visual e performance.
 ### Cuidados antes de publicar prints
 
 Antes de publicar imagens do painel, ative o Modo Privacidade para evitar exposição de IP público, nome real do servidor ou dados sensíveis.
+
+## Segurança do RCON
+
+A porta RCON do Conan Exiles usa TCP `25575`.
+
+Por segurança, ela deve ficar presa em `127.0.0.1`, assim:
+
+```yaml
+- 127.0.0.1:25575:25575/tcp
+```
+
+Isso significa que o RCON não fica aberto publicamente na internet ou na rede externa.
+
+O painel web continua conseguindo acessar o RCON internamente pela rede Docker usando:
+
+```text
+conan-exiles-enhanced:25575
+```
+
+Portanto, se a porta `25575` não aparecer aberta externamente, isso é esperado e correto.
+
+Resumo:
+
+```text
+✅ RCON fechado para fora
+✅ RCON acessível internamente pelo painel
+✅ Painel pode enviar comunicados RCON
+✅ Menor risco de acesso indevido à administração do servidor
+```
